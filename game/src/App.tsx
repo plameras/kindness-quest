@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import {badges, missions, type Badge, type Step} from './story';
 import {Scene} from './Scene';
 import {BusScene, ChoiceArt} from './BusScene';
+import {GameSound} from './sound';
 import './style.css';
 
 type Feedback = Step['choices'][number] & {earnedBadges: Badge[]};
@@ -10,6 +11,7 @@ const badgeKeys = Object.keys(badges) as Badge[];
 type Progress = {completed: number[]; badges: Badge[]};
 const empty: Progress = {completed: [], badges: []};
 const storageKey = 'kindness-quest-v1';
+const soundKey = 'kindness-quest-sound';
 
 function readProgress(): Progress {
   try {
@@ -30,6 +32,11 @@ function App() {
   const [stepId, setStepId] = useState('notice');
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [motion, setMotion] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [soundOn, setSoundOn] = useState(() => {
+    try { return localStorage.getItem(soundKey) === 'on'; }
+    catch { return false; }
+  });
+  const sound = useRef<GameSound | null>(null);
   const [view, setView] = useState<'play' | 'map'>('play');
   const heading = useRef<HTMLHeadingElement>(null);
   const feedbackHeading = useRef<HTMLHeadingElement>(null);
@@ -52,6 +59,15 @@ function App() {
     (feedback ? feedbackHeading : heading).current?.focus();
   }, [feedback, stepId, view, missionIndex]);
 
+  function toggleSound() {
+    const enabled = !soundOn;
+    setSoundOn(enabled);
+    try { localStorage.setItem(soundKey, enabled ? 'on' : 'off'); }
+    catch { /* The preference still applies for this visit. */ }
+    if (enabled) void (sound.current ??= new GameSound()).play('ready');
+    else sound.current?.stop();
+  }
+
   function start(index: number) {
     setMissionIndex(index);
     setStepId('notice');
@@ -62,6 +78,9 @@ function App() {
   function choose(choice: Step['choices'][number]) {
     const earnedBadges = (choice.badges ?? []).filter(badge => !progress.badges.includes(badge));
     setFeedback({...choice, earnedBadges});
+    if (soundOn) {
+      void (sound.current ??= new GameSound()).play(earnedBadges.length ? 'badge' : choice.next ? 'correct' : 'retry');
+    }
     if (earnedBadges.length) {
       setProgress(previous => ({...previous, badges: [...new Set([...previous.badges, ...earnedBadges])]}));
     }
@@ -71,15 +90,23 @@ function App() {
     const next = feedback?.next;
     setFeedback(null);
     if (!next) return;
-    if (next === 'finish') setProgress(previous => previous.completed.includes(missionIndex) ? previous :
-      {...previous, completed: [...previous.completed, missionIndex]});
+    if (next === 'finish') {
+      if (soundOn) void (sound.current ??= new GameSound()).play('finish');
+      setProgress(previous => previous.completed.includes(missionIndex) ? previous :
+        {...previous, completed: [...previous.completed, missionIndex]});
+    }
     setStepId(next);
   }
 
   return <>
     <header className="topbar"><div className="top-inner">
       <div className="brand"><span className="logo" aria-hidden="true">✦</span><div>Kindness Quest<small>SCHOOLYARD ADVENTURES</small></div></div>
-      <button type="button" className="map-button" onClick={() => setView(view === 'map' ? 'play' : 'map')}>{view === 'map' ? '← Back to mission' : '▦  Mission map'}</button>
+      <div className="header-actions">
+        <button type="button" className="map-button" onClick={toggleSound} aria-label="Sound effects" aria-pressed={soundOn}>
+          Sound {soundOn ? 'on' : 'off'}
+        </button>
+        <button type="button" className="map-button" onClick={() => setView(view === 'map' ? 'play' : 'map')}>{view === 'map' ? '← Back to mission' : '▦  Mission map'}</button>
+      </div>
     </div></header>
     <main>
       <div className="intro">

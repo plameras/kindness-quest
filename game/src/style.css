@@ -63,3 +63,6 @@ main{max-width:1160px;margin:auto;padding:35px 28px 0}.intro{margin-bottom:25px}
   from {transform:translate(0,-12px)}
   to {transform:translate(12px,29px) rotate(12deg)}
 }
+
+.header-actions {display:flex;justify-content:flex-end;flex-wrap:wrap;gap:6px}
+.header-actions button[aria-pressed="true"] {background:#eee5fb;border-color:#a989d3}
