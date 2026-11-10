@@ -66,14 +66,3 @@ main{max-width:1160px;margin:auto;padding:35px 28px 0}.intro{margin-bottom:25px}
 
 .header-actions {display:flex;justify-content:flex-end;flex-wrap:wrap;gap:6px}
 .header-actions button[aria-pressed="true"] {background:#eee5fb;border-color:#a989d3}
-
-.voice-caption {
-  margin:12px 0;
-  padding:8px 12px;
-  border-left:3px solid #956bcd;
-  border-radius:0 8px 8px 0;
-  background:#fffdf8;
-  color:#49315e;
-  font-size:14px;
-  line-height:1.5;
-}

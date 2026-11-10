@@ -3,7 +3,6 @@ import {createRoot} from 'react-dom/client';
 import {badges, missions, type Badge, type Step} from './story';
 import {Scene} from './Scene';
 import {BusScene, ChoiceArt} from './BusScene';
-import {dialogue} from './dialogue';
 import {GameSound} from './sound';
 import './style.css';
 
@@ -70,7 +69,6 @@ function App() {
   }
 
   function start(index: number) {
-    sound.current?.stop();
     setMissionIndex(index);
     setStepId('notice');
     setFeedback(null);
@@ -81,10 +79,7 @@ function App() {
     const earnedBadges = (choice.badges ?? []).filter(badge => !progress.badges.includes(badge));
     setFeedback({...choice, earnedBadges});
     if (soundOn) {
-      void (sound.current ??= new GameSound()).play(
-        earnedBadges.length ? 'badge' : choice.next ? 'correct' : 'retry',
-        choice.voice ? dialogue[choice.voice].clip : undefined,
-      );
+      void (sound.current ??= new GameSound()).play(earnedBadges.length ? 'badge' : choice.next ? 'correct' : 'retry');
     }
     if (earnedBadges.length) {
       setProgress(previous => ({...previous, badges: [...new Set([...previous.badges, ...earnedBadges])]}));
@@ -92,7 +87,6 @@ function App() {
   }
 
   function advance() {
-    sound.current?.stop();
     const next = feedback?.next;
     setFeedback(null);
     if (!next) return;
@@ -111,7 +105,7 @@ function App() {
         <button type="button" className="map-button" onClick={toggleSound} aria-label="Sound effects" aria-pressed={soundOn}>
           Sound {soundOn ? 'on' : 'off'}
         </button>
-        <button type="button" className="map-button" onClick={() => { sound.current?.stop(); setView(view === 'map' ? 'play' : 'map'); }}>{view === 'map' ? '← Back to mission' : '▦  Mission map'}</button>
+        <button type="button" className="map-button" onClick={() => setView(view === 'map' ? 'play' : 'map')}>{view === 'map' ? '← Back to mission' : '▦  Mission map'}</button>
       </div>
     </div></header>
     <main>
@@ -150,7 +144,6 @@ function App() {
             </> : feedback ? <div className={feedback.next ? 'feedback good' : 'feedback retry'}>
               <div className="eyebrow">{feedback.next ? '✦  GOOD THINKING' : '↻  TAKE ANOTHER LOOK'}</div>
               <h2 tabIndex={-1} ref={feedbackHeading}>{feedback.next ? 'Here’s what happened' : 'Try another choice'}</h2>
-              {feedback.voice && <p className="voice-caption">“{dialogue[feedback.voice].text}”</p>}
               <p className="story">{feedback.feedback}</p>
               {feedback.earnedBadges.map(badge =>
                 <p className="earned" key={badge}>{badges[badge].icon} Skill collected · {badges[badge].name}</p>

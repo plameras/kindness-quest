@@ -1,5 +1,3 @@
-import {ambience} from './dialogue';
-
 const cues = {
   ready: [523, 659],
   correct: [523, 659],
@@ -11,14 +9,13 @@ const cues = {
 export class GameSound {
   private context?: AudioContext;
   private output?: GainNode;
-  private clips = new Map<string, Promise<AudioBuffer>>();
 
   stop() {
     this.output?.disconnect();
     this.output = undefined;
   }
 
-  async play(cue: keyof typeof cues, voice?: string) {
+  async play(cue: keyof typeof cues) {
     this.stop();
     try {
       const context = this.context ??= new AudioContext();
@@ -45,39 +42,8 @@ export class GameSound {
         note.start(time);
         note.stop(time + 0.18);
       });
-
-      if (voice) {
-        const [speech, chatter] = await Promise.all([
-          this.decode(context, voice),
-          this.decode(context, ambience),
-        ]);
-        if (this.output !== output) return;
-
-        const sceneStart = Math.max(context.currentTime, start + cues[cue].length * .105 + .08);
-        for (const [buffer, volume] of [[chatter, .18], [speech, .62]] as const) {
-          const source = context.createBufferSource();
-          const level = context.createGain();
-          source.buffer = buffer;
-          level.gain.value = volume;
-          source.connect(level);
-          level.connect(output);
-          source.onended = () => level.disconnect();
-          source.start(sceneStart);
-        }
-      }
     } catch {
       // Sound is optional when the browser blocks or lacks audio playback.
     }
-  }
-
-  private decode(context: AudioContext, url: string) {
-    let clip = this.clips.get(url);
-    if (!clip) {
-      clip = fetch(url)
-        .then(response => response.arrayBuffer())
-        .then(bytes => context.decodeAudioData(bytes));
-      this.clips.set(url, clip);
-    }
-    return clip;
   }
 }
