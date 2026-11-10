@@ -1,9 +1,11 @@
 import {useEffect, useRef} from 'react';
 import Phaser from 'phaser';
+import {faceLines, reactions, type Expression} from './expressions';
 import type {SceneAction} from './story';
 
 class SchoolScene extends Phaser.Scene {
   private actors: Phaser.GameObjects.Container[] = [];
+  private faces = new Map<Phaser.GameObjects.Container, Phaser.GameObjects.Graphics>();
   private lastAction?: SceneAction;
   private lastMotion?: boolean;
 
@@ -82,6 +84,13 @@ class SchoolScene extends Phaser.Scene {
       actor.setPosition(...home[index]);
     });
 
+    const expression = reactions(action);
+    this.drawFace(friend, expression.friend);
+    this.drawFace(player, expression.player);
+    this.drawFace(adult, expression.adult);
+    this.drawFace(first, action === 'unsafe' ? 'surprised' : 'neutral');
+    this.drawFace(second, action === 'unsafe' ? 'surprised' : 'neutral');
+
     switch (action) {
       case 'support':
         this.move(player, 168, 249);
@@ -122,6 +131,16 @@ class SchoolScene extends Phaser.Scene {
     else actor.setPosition(x,y);
   }
 
+  private drawFace(actor: Phaser.GameObjects.Container, expression: Expression) {
+    const face = this.faces.get(actor);
+    if (!face) return;
+    face.clear().fillStyle(0x483044).fillCircle(-6, 0, 1.7).fillCircle(6, 0, 1.7);
+    face.lineStyle(1.7, 0x483044);
+    for (const line of faceLines[expression]) {
+      face.strokePoints(line.map(([x,y]) => ({x,y})));
+    }
+  }
+
   private person(x: number, y: number, shirt: number, skin: number, hair: number, name?: string, scale = 1) {
     const p = this.add.graphics();
     p.fillStyle(0x49354c,0.16).fillEllipse(0,1,43,10);
@@ -130,9 +149,10 @@ class SchoolScene extends Phaser.Scene {
     p.fillStyle(hair).fillCircle(0,-57,19);
     p.fillStyle(skin).fillEllipse(0,-55,32,34);
     p.fillStyle(hair).fillEllipse(-3,-68,30,13).fillCircle(-13,-63,6);
-    p.fillStyle(0x3e3047).fillCircle(-5,-55,1.65).fillCircle(5,-55,1.65);
-    p.lineStyle(1.5,0x784954).beginPath().moveTo(-3,-49).lineTo(3,-49).strokePath();
-    const actor = this.add.container(x,y,[p]).setScale(scale);
+    const face = this.add.graphics({y: -55});
+    const actor = this.add.container(x,y,[p, face]).setScale(scale);
+    this.faces.set(actor, face);
+    this.drawFace(actor, 'neutral');
     if(name) {
       const label = this.add.text(0,-93,name,{fontFamily:'system-ui',fontSize:'11px',fontStyle:'bold',color:'#392c50',backgroundColor:'#fff8ed',padding:{x:7,y:3}}).setOrigin(0.5);
       actor.add(label);

@@ -1,5 +1,7 @@
 import {useState, type KeyboardEvent} from 'react';
-import type {StepId} from './story';
+import {Face} from './Face';
+import {reactions} from './expressions';
+import type {SceneAction, StepId} from './story';
 
 export const libraryTargets = {
   notice: {x: 2, y: 0, name: 'Clue card', action: 'Pick up clue', icon: '▤'},
@@ -20,14 +22,16 @@ const tile = 68;
 const boardLeft = 62;
 const boardTop = 48;
 
-export function LibraryScene({step, active, motion, onInteract, onSound}: {
+export function LibraryScene({step, active, motion, action, onInteract, onSound}: {
   step: StepId;
   active: boolean;
   motion: boolean;
+  action?: SceneAction;
   onInteract: () => void;
   onSound: (cue: 'move' | 'tap' | 'interact') => void;
 }) {
   const [position, setPosition] = useState({x: 0, y: 3});
+  const expression = reactions(action);
   const target = libraryTargets[step];
   const atTarget = position.x === target.x && position.y === target.y;
 
@@ -72,14 +76,20 @@ export function LibraryScene({step, active, motion, onInteract, onSound}: {
       {Object.entries(libraryTargets).map(([id, place]) => <g key={id}
         transform={`translate(${boardLeft + place.x * tile + 32} ${boardTop + place.y * tile + 30})`}>
         <circle r="20" fill={id === step && active ? '#7550b6' : '#dac9e8'}/>
-        <text textAnchor="middle" y="7" fill={id === step && active ? '#fff' : '#54396d'}
-          fontSize="21" fontWeight="800">{place.icon}</text>
+        {id === 'notice' ? <text textAnchor="middle" y="7" fill={id === step && active ? '#fff' : '#54396d'}
+          fontSize="21" fontWeight="800">{place.icon}</text> : <>
+          <circle r="14" fill={id === 'act' ? '#c78c67' : '#e0aa81'}/>
+          <path d="M-13-4q0-14 13-13t13 13q-12-1-15-7-4 7-11 7" fill="#473247"/>
+          <Face expression={id === 'act' ? expression.friend : expression.adult} transform="scale(.85)"/>
+        </>}
         <text textAnchor="middle" y="30" fill="#493960" fontSize="10" fontWeight="800">{place.name}</text>
       </g>)}
       <g className={motion ? 'library-player moving' : 'library-player'}
         transform={`translate(${boardLeft + position.x * tile + (atTarget ? 51 : 32)} ${boardTop + position.y * tile + 31})`}>
         <circle r="16" fill="#d36955" stroke="#fff5e8" strokeWidth="3"/>
-        <text textAnchor="middle" y="4" fill="#fff" fontSize="10" fontWeight="900">YOU</text>
+        <circle r="11" fill="#f2b890"/>
+        <Face expression={expression.player} transform="scale(.68)"/>
+        <text textAnchor="middle" y="24" fill="#493960" fontSize="8" fontWeight="900">YOU</text>
       </g>
     </svg>
     <div className="library-controls">

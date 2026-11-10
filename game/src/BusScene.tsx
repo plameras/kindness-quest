@@ -1,3 +1,5 @@
+import {Face} from './Face';
+import {reactions, type Expression} from './expressions';
 import type {BusSequenceStep, CardArt, Step} from './story';
 
 const illustrations: Record<CardArt, {color: string; path: string}> = {
@@ -16,7 +18,7 @@ export function ChoiceArt({art}: {art: CardArt}) {
   </span>;
 }
 
-function BusPerson({label, shirt, seated = false}: {label: string; shirt: string; seated?: boolean}) {
+function BusPerson({label, shirt, seated = false, expression}: {label: string; shirt: string; seated?: boolean; expression: Expression}) {
   return <g>
     <ellipse cy="61" rx="27" ry="6" fill="#6a4752" opacity=".2"/>
     <path d={seated ? "M-9 40l-5 7v8m23-15 5 7v8" : "M-9 41v17m18-17v17"} stroke="#483757" strokeWidth="9" strokeLinecap="round"/>
@@ -24,7 +26,7 @@ function BusPerson({label, shirt, seated = false}: {label: string; shirt: string
     <circle cy="-15" r="23" fill="#55374b"/>
     <ellipse cy="-10" rx="18" ry="20" fill="#d99a72"/>
     <path d="M-17-17q2-23 25-15l9 13q-10-2-17-9-5 8-17 11" fill="#55374b"/>
-    <path d="M-6-10h1m10 0h1m-9 10q3 2 6 0" stroke="#483044" strokeWidth="2" strokeLinecap="round" fill="none"/>
+    <Face expression={expression} transform="translate(0 -10)"/>
     <rect x="-37" y="-62" width="74" height="18" rx="9" fill="#fff8ee"/>
     <text y="-49" textAnchor="middle" fill="#493960" fontSize="10" fontWeight="800">{label}</text>
   </g>;
@@ -43,6 +45,7 @@ export function BusScene({choice, stopped, sequenceStep, motion}: {
   motion: boolean;
 }) {
   const action = sequenceStep === 'tell' ? 'report' : choice?.scene;
+  const expression = reactions(action);
   const parked = stopped || sequenceStep === 'find' || sequenceStep === 'tell';
   const playerX = parked ? (action === 'report' ? 492 : sequenceStep === 'find' ? 458 : choice ? 427 : 132)
     : action === 'support' ? 257 : 132;
@@ -79,7 +82,7 @@ export function BusScene({choice, stopped, sequenceStep, motion}: {
       <path d="M21 82v17m72-17v17" stroke="#69496e" strokeWidth="7" strokeLinecap="round"/>
     </g>)}
     <g transform={`translate(${playerX} ${playerY})`} className="bus-player">
-      <BusPerson label="YOU" shirt="#ec8b78" seated={!parked && action !== 'unsafe'}/>
+      <BusPerson label="YOU" shirt="#ec8b78" expression={expression.player} seated={!parked && action !== 'unsafe'}/>
     </g>
     <g transform="translate(358 213)">
       <ellipse cy="62" rx="43" ry="8" fill="#916367" opacity=".4"/>
@@ -88,12 +91,12 @@ export function BusScene({choice, stopped, sequenceStep, motion}: {
       <circle cy="-16" r="25" fill="#47324d"/>
       <ellipse cy="-11" rx="20" ry="21" fill="#b87556"/>
       <path d="M-20-17q4-26 28-17 10 5 12 16-14-3-22-12-6 12-18 13" fill="#47324d"/>
-      <path d={action === 'support' || action === 'report' ? 'M-7-11h1m12 0h1m-10 10q3 3 6 0' : 'M-7-11h1m12 0h1m-10 10q3-3 6 0'} stroke="#483044" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+      <Face expression={expression.friend} transform="translate(0 -11)"/>
       <rect x="-22" y="-65" width="44" height="19" rx="8" fill="#fff8ee"/>
       <text y="-52" textAnchor="middle" fill="#493960" fontSize="11" fontWeight="800">ARI</text>
     </g>
     <g className="bus-player" transform={`translate(${action === 'report' ? 551 : 573} 218)`}>
-      <BusPerson label="TEACHER" shirt="#795b9c" seated={!parked}/>
+      <BusPerson label="TEACHER" shirt="#795b9c" expression={expression.adult} seated={!parked}/>
     </g>
     <g key={choice?.label ?? 'bag'} transform="translate(406 237)">
     <g className={action === 'pattern' ? `bus-bag ${choice?.art === 'repeat' ? 'repeat' : ''}` : undefined}

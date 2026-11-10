@@ -163,7 +163,7 @@ function App() {
         {view === 'play' ? <section className="mission-card" aria-label={mission.title}>
           <div className="scene-frame">
             {inLibrary
-              ? <LibraryScene key={libraryRun} step={libraryStep} active={libraryMoving} motion={motion}
+              ? <LibraryScene key={libraryRun} step={libraryStep} active={libraryMoving} motion={motion} action={feedback?.scene}
                 onInteract={() => setLibraryReached(libraryStep)}
                 onSound={cue => { if (soundOn) void (sound.current ??= new GameSound()).play(cue); }}/>
               : missionIndex === 2
