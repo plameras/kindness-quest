@@ -136,3 +136,62 @@ main{max-width:1160px;margin:auto;padding:35px 28px 0}.intro{margin-bottom:25px}
 .library-buttons {display:flex;flex-wrap:wrap;gap:6px}
 .library-buttons .secondary {min-width:40px;min-height:40px;padding:5px 10px;font-size:19px}
 .library-buttons .primary {min-height:40px}
+
+.quest-scorecard {
+  max-width:850px;
+  margin:0 auto;
+  overflow:hidden;
+  border:1px solid #e5d6f4;
+  border-radius:20px;
+  background:#fff;
+  box-shadow:0 12px 36px #53347814;
+}
+.quest-finale {
+  text-align:center;
+  padding:30px 20px 24px;
+  background:radial-gradient(ellipse at 50% 75%,#fff1be,#f4eafb 65%,#faf7fd);
+}
+.quest-finale h1 {font-size:clamp(28px,5vw,48px);margin:8px 0}
+.quest-finale p,.quest-summary p {color:#493960;line-height:1.5}
+.gold-badge {
+  display:inline-grid;
+  justify-items:center;
+  gap:12px;
+  margin-top:6px;
+  padding:10px 16px;
+  border:0;
+  border-radius:14px;
+  background:transparent;
+  color:#50338a;
+  font-size:14px;
+  font-weight:850;
+}
+.gold-medal {
+  display:grid;
+  place-items:center;
+  width:100px;
+  aspect-ratio:1;
+  border:5px solid #f8cf61;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 22%,#fff3ad,#f2c44d 60%,#d99420);
+  color:#6d410c;
+  font-size:48px;
+  box-shadow:0 0 0 2px #99610f,inset 0 0 0 3px #fff1a9,0 8px 18px #9f6c3733;
+}
+.gold-badge:hover .gold-medal {box-shadow:0 0 0 2px #99610f,inset 0 0 0 3px #fff1a9,0 8px 20px #9f6c3777}
+.medal-reveal {animation:medal-reveal .55s ease-out}
+@keyframes medal-reveal {
+  0%,100% {transform:scale(1)}
+  55% {transform:scale(1.12) rotate(-8deg)}
+}
+@media (prefers-reduced-motion:reduce) {.medal-reveal {animation:none}}
+.quest-message {max-width:460px;margin:12px auto 0;padding:12px;border-radius:12px;background:#fffaf0}
+.quest-summary {padding:clamp(16px,4vw,32px)}
+.quest-summary h2 {margin:0}
+.quest-missions {display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.quest-mission {padding:12px 14px;border:1px solid #ece3f5;border-radius:12px;background:#faf7fc}
+.quest-mission h3 {margin:0 0 7px;font-size:16px}
+.quest-mission ul {margin:0;padding:0;list-style:none}
+.quest-mission li {padding:3px 0;color:#493960;font-size:14px}
+.quest-mission li span {color:#42825f;font-weight:800}
+.quest-reflection {margin-bottom:0}

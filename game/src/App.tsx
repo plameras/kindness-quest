@@ -6,6 +6,7 @@ import {LibraryScene, libraryTargets} from './LibraryScene';
 import {Scene} from './Scene';
 import {BusScene, ChoiceArt} from './BusScene';
 import {missionBadges, progressKey, readProgress} from './progress';
+import {Scorecard} from './Scorecard';
 import {GameSound} from './sound';
 import './style.css';
 
@@ -38,8 +39,9 @@ function App() {
     catch { return false; }
   });
   const sound = useRef<GameSound | null>(null);
-  const [view, setView] = useState<'play' | 'map'>('play');
+  const [view, setView] = useState<'play' | 'map' | 'scorecard'>('play');
   const heading = useRef<HTMLHeadingElement>(null);
+  const scoreHeading = useRef<HTMLHeadingElement>(null);
   const feedbackHeading = useRef<HTMLHeadingElement>(null);
   const initialRender = useRef(true);
   const mission = missions[missionIndex];
@@ -66,7 +68,7 @@ function App() {
 
   useEffect(() => {
     if (initialRender.current) { initialRender.current = false; return; }
-    (feedback ? feedbackHeading : heading).current?.focus();
+    (view === 'scorecard' ? scoreHeading : feedback ? feedbackHeading : heading).current?.focus();
   }, [feedback, stepId, view, missionIndex, playbackIndex === null, libraryMoving]);
 
   useEffect(() => {
@@ -134,6 +136,9 @@ function App() {
       if (soundOn) void (sound.current ??= new GameSound()).play('finish');
       setProgress(previous => previous.completed.includes(missionIndex) ? previous :
         {...previous, completed: [...previous.completed, missionIndex]});
+      if (missions.every((_, index) => index === missionIndex || progress.completed.includes(index))) {
+        setView('scorecard');
+      }
     }
     setStepId(next);
   }
@@ -154,6 +159,9 @@ function App() {
       </div>
     </div></header>
     <main>
+      {view === 'scorecard' ? <Scorecard progress={progress} motion={motion} headingRef={scoreHeading}
+        onCelebrate={() => { if (soundOn) void (sound.current ??= new GameSound()).play('victory'); }}/>
+        : <>
       <div className="intro">
         <div className="eyebrow"><span aria-hidden="true">✧</span> {view === 'play' ? `MISSION 0${missionIndex + 1} / 0${missions.length}` : 'YOUR ADVENTURE'}</div>
         <h1>{view === 'play' ? mission.title : 'Mission map'}</h1>
@@ -226,6 +234,7 @@ function App() {
           </div>
         </section> : <section className="map-card" aria-label="Missions">
           <h2 tabIndex={-1} ref={heading}>Choose a mission</h2>
+          {allMissionsComplete && <button className="primary" onClick={() => setView('scorecard')}>View quest scorecard →</button>}
           {missions.map((item, i) => {
             const required = missionBadges(item);
             const count = required.filter(badge => progress.badges.includes(badge)).length;
@@ -262,6 +271,7 @@ function App() {
           <div className="tip"><span aria-hidden="true">♥</span><div><strong>You can ask for help</strong><p>If something like this happens to you or someone you know, you can talk to an adult you trust.</p></div></div>
         </aside>
       </div>
+      </>}
       <footer><span>✦</span> KINDNESS QUEST <span>·</span> SCHOOLYARD ADVENTURES</footer>
     </main>
   </>;
