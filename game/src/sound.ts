@@ -1,4 +1,7 @@
 const cues = {
+  move: [330],
+  tap: [392],
+  interact: [587, 880],
   ready: [523, 659],
   correct: [523, 659],
   retry: [440, 392],

@@ -20,11 +20,12 @@ const tile = 68;
 const boardLeft = 62;
 const boardTop = 48;
 
-export function LibraryScene({step, active, motion, onInteract}: {
+export function LibraryScene({step, active, motion, onInteract, onSound}: {
   step: StepId;
   active: boolean;
   motion: boolean;
   onInteract: () => void;
+  onSound: (cue: 'move' | 'tap' | 'interact') => void;
 }) {
   const [position, setPosition] = useState({x: 0, y: 3});
   const target = libraryTargets[step];
@@ -32,14 +33,19 @@ export function LibraryScene({step, active, motion, onInteract}: {
 
   function move(dx: number, dy: number) {
     if (!active) return;
-    setPosition(previous => ({
-      x: Math.max(0, Math.min(columns - 1, previous.x + dx)),
-      y: Math.max(0, Math.min(rows - 1, previous.y + dy)),
-    }));
+    const next = {
+      x: Math.max(0, Math.min(columns - 1, position.x + dx)),
+      y: Math.max(0, Math.min(rows - 1, position.y + dy)),
+    };
+    if (next.x === position.x && next.y === position.y) return;
+    setPosition(next);
+    onSound('move');
   }
 
   function interact() {
-    if (active && atTarget) onInteract();
+    if (!active) return;
+    onSound(atTarget ? 'interact' : 'tap');
+    if (atTarget) onInteract();
   }
 
   function handleKey(event: KeyboardEvent<HTMLDivElement>) {

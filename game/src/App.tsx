@@ -164,7 +164,8 @@ function App() {
           <div className="scene-frame">
             {inLibrary
               ? <LibraryScene key={libraryRun} step={libraryStep} active={libraryMoving} motion={motion}
-                onInteract={() => setLibraryReached(libraryStep)}/>
+                onInteract={() => setLibraryReached(libraryStep)}
+                onSound={cue => { if (soundOn) void (sound.current ??= new GameSound()).play(cue); }}/>
               : missionIndex === 2
               ? <BusScene choice={feedback} stopped={finished || (stepId === 'report' && !!feedback)}
                 sequenceStep={busAction} motion={motion}/>
