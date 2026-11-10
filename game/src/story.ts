@@ -8,6 +8,9 @@ export const badges = {
   busNotice: {name: 'Connect the Clues', icon: '◎', detail: 'Notice that the group keeps knocking Ari’s bag down.'},
   busSupport: {name: 'Check In Safely', icon: '♡', detail: 'Stay seated and quietly ask Ari if they’re okay.'},
   report: {name: 'Speak Up Safely', icon: '◈', detail: 'Tell a trusted adult on the bus what happened.'},
+  libraryNotice: {name: 'Find the Facts', icon: '◎', detail: 'Find the clue and spot what happened more than once.'},
+  librarySupport: {name: 'Offer Company', icon: '♡', detail: 'Ask Niko if they’d like you to stay with them.'},
+  libraryReport: {name: 'Tell What You Saw', icon: '✦', detail: 'Tell the librarian what happened and where.'},
 };
 export type Badge = keyof typeof badges;
 export type CardArt = 'repeat' | 'joke' | 'backpack' | 'seat' | 'adult' | 'shout';
@@ -103,6 +106,25 @@ export const missions: Mission[] = [
         }, choices: [
         {scene: 'vague', cue: 'What happens first?', art: 'backpack', label: 'Something happened with a bag.', feedback: 'Stay seated while the bus is moving. When it stops, find the teacher on the bus, then tell them what happened.'},
         {scene: 'report', cue: 'It happened today and yesterday.', art: 'adult', label: 'The group knocked Ari’s bag down on the bus today and yesterday. Ari asked them to stop.', feedback: 'The teacher listens and checks on Ari. They’ll follow up with the school to help make the ride safer.', next: 'finish', badge: 'report'},
+      ]},
+    },
+  },
+  {
+    title: 'The Library', setting: 'During library time', icon: '▤',
+    reflection: 'What is one way you could help someone feel less alone while you wait for an adult to help?',
+    badgeByStep: {notice: 'libraryNotice', act: 'librarySupport', report: 'libraryReport'},
+    steps: {
+      notice: {prompt: 'What does the clue show?', story: 'Your clue card says the same group hid Niko’s library book behind the reading shelf today and yesterday. Niko asked them to stop.', choices: [
+        {scene: 'pattern', cue: 'It happened twice.', label: 'The same group keeps hiding Niko’s book.', feedback: 'You spotted the pattern. The same group did it again after Niko asked them to stop.', next: 'act', badge: 'libraryNotice'},
+        {scene: 'mistake', cue: 'Look at both days.', label: 'Niko forgot where the book was.', feedback: 'The clue says the group moved the book. Look at how often it happened.'},
+      ]},
+      act: {prompt: 'How could you help Niko?', story: 'Niko is by the reading table. They look worried about getting their book back.', choices: [
+        {scene: 'support', cue: 'Niko, want some company?', label: 'Ask Niko if they’d like you to stay with them.', feedback: 'Niko asks you to come along to tell the librarian. You can help Niko feel less alone.', next: 'report', badge: 'librarySupport'},
+        {scene: 'unsafe', cue: 'Take a moment.', label: 'Hide the other pupils’ books.', feedback: 'Hiding their books could make things worse. Try a choice that helps Niko feel safe.'},
+      ]},
+      report: {prompt: 'What could you tell the librarian?', story: 'The librarian asks what happened. Tell them what you know from the clue.', choices: [
+        {scene: 'report', cue: 'It happened by the reading shelf.', label: 'The same group hid Niko’s book behind the reading shelf today and yesterday.', feedback: 'The librarian knows what happened, where, and when. They check on Niko and make a plan to help.', next: 'finish', badge: 'libraryReport'},
+        {scene: 'vague', cue: 'Share the details you know.', label: 'Something happened to a book.', feedback: 'Add who was affected, where it happened, and that it happened on both days.'},
       ]},
     },
   },

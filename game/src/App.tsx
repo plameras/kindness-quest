@@ -2,6 +2,7 @@ import {useEffect, useRef, useState, type CSSProperties} from 'react';
 import {createRoot} from 'react-dom/client';
 import {badges, busSequence, missions, stepIds, type Badge, type Step, type StepId} from './story';
 import {ChallengeCards} from './ChallengeCards';
+import {LibraryScene, libraryTargets} from './LibraryScene';
 import {Scene} from './Scene';
 import {BusScene, ChoiceArt} from './BusScene';
 import {missionBadges, progressKey, readProgress} from './progress';
@@ -27,6 +28,8 @@ function App() {
   const [missionIndex, setMissionIndex] = useState(0);
   const [stepId, setStepId] = useState<StepId | 'finish'>('notice');
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [libraryReached, setLibraryReached] = useState<StepId>();
+  const [libraryRun, setLibraryRun] = useState(0);
   const [playbackIndex, setPlaybackIndex] = useState<number | null>(null);
   const [celebrating, setCelebrating] = useState(false);
   const [motion, setMotion] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -48,6 +51,9 @@ function App() {
   const missingStep = stepIds.find(id => !progress.badges.includes(mission.badgeByStep[id]));
   const needsPractice = feedback?.next === 'finish' && missingStep !== undefined;
   const finished = stepId === 'finish';
+  const inLibrary = missionIndex === 3;
+  const libraryStep = stepId === 'finish' ? 'report' : stepId;
+  const libraryMoving = inLibrary && !finished && libraryReached !== libraryStep;
   const busAction = playbackIndex === null ? undefined : busSequence[playbackIndex];
   const nextMission = missions[missionIndex + 1];
   const allMissionsComplete = progress.completed.length === missions.length;
@@ -61,7 +67,7 @@ function App() {
   useEffect(() => {
     if (initialRender.current) { initialRender.current = false; return; }
     (feedback ? feedbackHeading : heading).current?.focus();
-  }, [feedback, stepId, view, missionIndex, playbackIndex === null]);
+  }, [feedback, stepId, view, missionIndex, playbackIndex === null, libraryMoving]);
 
   useEffect(() => {
     if (view !== 'play' || playbackIndex === null || playbackIndex >= busSequence.length - 1) return;
@@ -81,6 +87,8 @@ function App() {
   }
 
   function start(index: number) {
+    setLibraryReached(undefined);
+    setLibraryRun(run => run + 1);
     setPlaybackIndex(null);
     setCelebrating(false);
     setMissionIndex(index);
@@ -154,7 +162,10 @@ function App() {
       <div className="layout">
         {view === 'play' ? <section className="mission-card" aria-label={mission.title}>
           <div className="scene-frame">
-            {missionIndex === 2
+            {inLibrary
+              ? <LibraryScene key={libraryRun} step={libraryStep} active={libraryMoving} motion={motion}
+                onInteract={() => setLibraryReached(libraryStep)}/>
+              : missionIndex === 2
               ? <BusScene choice={feedback} stopped={finished || (stepId === 'report' && !!feedback)}
                 sequenceStep={busAction} motion={motion}/>
               : <Scene lunch={missionIndex === 1} action={feedback?.scene} motion={motion}/>}
@@ -179,6 +190,10 @@ function App() {
                   : <button className="primary" onClick={() => setView('map')}>View mission map →</button>}
                 <button className="secondary" onClick={() => start(missionIndex)}>Replay mission</button>
               </div>
+            </> : libraryMoving ? <>
+              <h2 tabIndex={-1} ref={heading}>Find {libraryTargets[libraryStep].name}</h2>
+              <p className="story">Use the arrow keys or the buttons under the picture. When you reach the highlighted spot, press Enter or tap the action button.</p>
+              <button className="secondary" onClick={() => document.getElementById('library-board')?.focus()}>Focus movement controls</button>
             </> : busAction ? <div className="feedback good">
               <h2 tabIndex={-1} ref={heading}>Watch your plan</h2>
               <p className="story" role="status">Step {(playbackIndex ?? 0) + 1} of {busSequence.length}</p>

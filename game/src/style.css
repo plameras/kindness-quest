@@ -126,3 +126,13 @@ main{max-width:1160px;margin:auto;padding:35px 28px 0}.intro{margin-bottom:25px}
 }
 .bus-scene.parked .bus-hills,
 .bus-scene.parked .bus-trees {animation-play-state:paused}
+
+.library-board {background:#f7eddf}
+.library-board:focus-visible {outline:3px solid #7651bd;outline-offset:-4px}
+.library-board svg {display:block;width:100%;height:auto;max-height:360px}
+.library-player.moving {transition:transform .15s ease-out}
+.library-controls {padding:10px 16px 14px;background:#fff8ee}
+.library-controls p {margin:0 0 8px;color:#493960;font-size:13px;font-weight:750}
+.library-buttons {display:flex;flex-wrap:wrap;gap:6px}
+.library-buttons .secondary {min-width:40px;min-height:40px;padding:5px 10px;font-size:19px}
+.library-buttons .primary {min-height:40px}
