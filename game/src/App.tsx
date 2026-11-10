@@ -2,6 +2,7 @@ import {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {badges, missions, type Badge, type Step} from './story';
 import {Scene} from './Scene';
+import {BusScene, ChoiceArt} from './BusScene';
 import './style.css';
 
 type Progress = {completed: number[]; badges: Badge[]};
@@ -85,7 +86,7 @@ function App() {
       <div className="layout">
         {view === 'play' ? <section className="mission-card" aria-label={mission.title}>
           <div className="scene-frame">
-            <Scene lunch={missionIndex === 1}/>
+            {missionIndex === 2 ? <BusScene/> : <Scene lunch={missionIndex === 1}/>}
             <span className="setting"><i />{mission.setting}</span>
           </div>
           <div className="mission-content">
@@ -112,8 +113,8 @@ function App() {
             </div> : <>
               <h2 tabIndex={-1} ref={heading}>{step.prompt}</h2>
               <p className="story">{step.story}</p>
-              <div className="choices">{step.choices.map((choice, i) =>
-                <button key={choice.label} onClick={() => choose(choice)}><span className="choice-letter" aria-hidden="true">{String.fromCharCode(65+i)}</span><span>{choice.label}</span><span className="chevron" aria-hidden="true">›</span></button>
+              <div className={step.choices[0]?.art ? 'choices illustrated-choices' : 'choices'}>{step.choices.map((choice, i) =>
+                <button key={choice.label} onClick={() => choose(choice)}>{choice.art ? <ChoiceArt art={choice.art}/> : <span className="choice-letter" aria-hidden="true">{String.fromCharCode(65+i)}</span>}<span>{choice.label}</span><span className="chevron" aria-hidden="true">›</span></button>
               )}</div>
             </>}
           </div>
@@ -121,7 +122,7 @@ function App() {
           <h2 tabIndex={-1} ref={heading}>Choose a mission</h2>
           {missions.map((item, i) => <div className="mission-row" key={item.title}>
             <span className="badge-icon" aria-hidden="true">{item.icon}</span>
-            <div><strong>{item.title}</strong><small>{progress.completed.includes(i) ? 'Completed' : unlocked(i) ? item.setting : 'Finish the Playground to unlock'}</small></div>
+            <div><strong>{item.title}</strong><small>{progress.completed.includes(i) ? 'Completed' : unlocked(i) ? item.setting : `Finish ${missions[i - 1].title} to unlock`}</small></div>
             <button className="secondary" disabled={!unlocked(i)} onClick={() => start(i)}>{!unlocked(i) ? 'Locked' : progress.completed.includes(i) ? 'Replay' : 'Play'}</button>
           </div>)}
         </section>}
