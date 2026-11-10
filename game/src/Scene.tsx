@@ -1,8 +1,15 @@
 import {useEffect, useRef} from 'react';
 import Phaser from 'phaser';
+import type {SceneAction} from './story';
 
 class SchoolScene extends Phaser.Scene {
-  constructor(private lunch: boolean) { super('school'); }
+  private actors: Phaser.GameObjects.Container[] = [];
+  private lastAction?: SceneAction;
+  private lastMotion?: boolean;
+
+  constructor(private lunch: boolean, private state: () => {action?: SceneAction; motion: boolean}) {
+    super('school');
+  }
 
   create() {
     const g = this.add.graphics();
@@ -51,17 +58,68 @@ class SchoolScene extends Phaser.Scene {
         box(0x73a777,x,y,17,4,2); oval(0xf6da85,x+10,y-2,5,5);
       }
     }
-    this.person(211, 225, 0x8457b9, 0xa8664b, 0x362a44, this.lunch ? 'JO' : 'SAM');
-    this.person(343, 233, 0xe79955, 0xe6a982, 0x55383c);
-    this.person(392, 218, 0x548eaa, 0xbd7a58, 0x402e4e);
-    this.person(572, 223, 0x568d76, 0xe4a57f, 0x623746, this.lunch ? 'MR. LEE' : 'MS. RIVERA', 1.16);
-
+    const friend = this.person(211, 225, 0x8457b9, 0xa8664b, 0x362a44, this.lunch ? 'JO' : 'SAM');
+    const first = this.person(343, 233, 0xe79955, 0xe6a982, 0x55383c);
+    const second = this.person(392, 218, 0x548eaa, 0xbd7a58, 0x402e4e);
+    const adult = this.person(572, 223, 0x568d76, 0xe4a57f, 0x623746, this.lunch ? 'MR. LEE' : 'MS. RIVERA', 1.16);
     const player = this.person(104, 268, 0xec8b78, 0xb87552, 0x382b45, 'YOU');
-    const move = (x: number, y: number) => {
-      this.tweens.killTweensOf(player);
-      this.tweens.add({targets: player, x: Phaser.Math.Clamp(x,48,675), y: Phaser.Math.Clamp(y,233,290), duration: 440, ease: 'Sine.easeOut'});
-    };
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => move(pointer.x, pointer.y));
+    this.actors = [friend, first, second, adult, player];
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (!this.state().action) this.move(player, Phaser.Math.Clamp(pointer.x,48,675), Phaser.Math.Clamp(pointer.y,233,290));
+    });
+  }
+
+  update() {
+    const {action, motion} = this.state();
+    if (action === this.lastAction && motion === this.lastMotion) return;
+    this.lastAction = action;
+    this.lastMotion = motion;
+
+    const [friend, first, second, adult, player] = this.actors;
+    const home: [number, number][] = [[211,225],[343,233],[392,218],[572,223],[104,268]];
+    this.actors.forEach((actor, index) => {
+      this.tweens.killTweensOf(actor);
+      actor.setPosition(...home[index]);
+    });
+
+    switch (action) {
+      case 'support':
+        this.move(player, 168, 249);
+        this.move(friend, 219, 238);
+        break;
+      case 'help':
+      case 'vague':
+        this.move(player, 523, 254);
+        break;
+      case 'report':
+        this.move(player, 516, 254);
+        this.move(adult, 541, 219);
+        this.move(friend, 472, 228);
+        break;
+      case 'unsafe':
+        this.move(player, 315, 261);
+        if (!this.lunch) {
+          this.move(first, 415, 233);
+          this.move(second, 454, 220);
+        }
+        break;
+      case 'pattern':
+        this.move(first, this.lunch ? 268 : 273, 232);
+        this.move(second, 316, 221);
+        this.move(friend, 188, 226);
+        break;
+      case 'mistake':
+        this.move(friend, 183, 225);
+        break;
+      default:
+        if (motion) this.tweens.add({targets: [first, second], y: '-=3', duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'});
+    }
+  }
+
+  private move(actor: Phaser.GameObjects.Container, x: number, y: number) {
+    this.tweens.killTweensOf(actor);
+    if (this.state().motion) this.tweens.add({targets: actor, x, y, duration: 540, ease: 'Sine.easeInOut'});
+    else actor.setPosition(x,y);
   }
 
   private person(x: number, y: number, shirt: number, skin: number, hair: number, name?: string, scale = 1) {
@@ -83,14 +141,16 @@ class SchoolScene extends Phaser.Scene {
   }
 }
 
-export function Scene({lunch}: {lunch: boolean}) {
+export function Scene({lunch, action, motion}: {lunch: boolean; action?: SceneAction; motion: boolean}) {
+  const state = useRef({action, motion});
+  useEffect(() => { state.current = {action, motion}; }, [action, motion]);
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!host.current) return;
     const game = new Phaser.Game({
       type: Phaser.AUTO, parent: host.current, width: 720, height: 330,
       backgroundColor: '#bbdff1', scale: {mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH},
-      scene: new SchoolScene(lunch), audio: {noAudio: true},
+      scene: new SchoolScene(lunch, () => state.current), audio: {noAudio: true},
     });
     return () => game.destroy(true);
   }, [lunch]);

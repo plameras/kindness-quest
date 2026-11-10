@@ -17,3 +17,49 @@ main{max-width:1160px;margin:auto;padding:35px 28px 0}.intro{margin-bottom:25px}
   .choice-art{grid-column:auto;min-height:54px}
   .choice-art svg{width:46px;height:42px}
 }
+
+.scene-cue {
+  position:absolute;
+  top:18%;
+  left:50%;
+  transform:translateX(-50%);
+  width:max-content;
+  max-width:85%;
+  padding:8px 14px;
+  border:1px solid #eadff4;
+  border-radius:12px;
+  box-shadow:0 3px 9px #4a325020;
+  background:#fffdf8;
+  color:#49315e;
+  font-size:clamp(11px,2.5vw,16px);
+  font-weight:800;
+  pointer-events:none;
+}
+.scene-cue-enter {animation:cue-enter .26s ease-out}
+@keyframes cue-enter {
+  from {opacity:0;transform:translate(-50%,6px)}
+  to {opacity:1;transform:translate(-50%,0)}
+}
+.motion-button {
+  position:absolute;
+  right:10px;
+  top:10px;
+  padding:6px 10px;
+  border:1px solid #dacceb;
+  border-radius:20px;
+  background:#fffaf0;
+  color:#493960;
+  font-size:11px;
+  font-weight:800;
+}
+.bus-scene.moving .bus-hills {animation:bus-scenery 8s linear infinite}
+.bus-scene.moving .bus-trees {animation:bus-scenery 4s linear infinite}
+.bus-scene.moving .bus-player {transition:transform .55s ease-in-out}
+.bus-bag {transform:translate(12px,29px) rotate(12deg)}
+.bus-scene.moving .bus-bag {animation:bag-drop .62s ease-in both}
+.bus-scene.moving .bus-bag.repeat {animation-iteration-count:2}
+@keyframes bus-scenery {to {transform:translateX(-240px)}}
+@keyframes bag-drop {
+  from {transform:translate(0,-12px)}
+  to {transform:translate(12px,29px) rotate(12deg)}
+}

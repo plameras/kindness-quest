@@ -29,6 +29,7 @@ function App() {
   const [missionIndex, setMissionIndex] = useState(0);
   const [stepId, setStepId] = useState('notice');
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [motion, setMotion] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [view, setView] = useState<'play' | 'map'>('play');
   const heading = useRef<HTMLHeadingElement>(null);
   const feedbackHeading = useRef<HTMLHeadingElement>(null);
@@ -89,7 +90,13 @@ function App() {
       <div className="layout">
         {view === 'play' ? <section className="mission-card" aria-label={mission.title}>
           <div className="scene-frame">
-            {missionIndex === 2 ? <BusScene/> : <Scene lunch={missionIndex === 1}/>}
+            {missionIndex === 2
+              ? <BusScene choice={feedback} stopped={stepId === 'report' || finished} motion={motion}/>
+              : <Scene lunch={missionIndex === 1} action={feedback?.scene} motion={motion}/>}
+            {feedback && <div key={feedback.cue} className={motion ? 'scene-cue scene-cue-enter' : 'scene-cue'}>{feedback.cue}</div>}
+            <button type="button" className="motion-button" onClick={() => setMotion(value => !value)}>
+              {motion ? 'Pause motion' : 'Play motion'}
+            </button>
             <span className="setting"><i />{mission.setting}</span>
           </div>
           <div className="mission-content">

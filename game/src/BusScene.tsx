@@ -1,4 +1,4 @@
-import type {CardArt} from './story';
+import type {CardArt, Step} from './story';
 
 const illustrations: Record<CardArt, {color: string; path: string}> = {
   repeat: {color: 'lavender', path: 'M49 21H24a11 11 0 0 0 0 22h5m13 0h7a11 11 0 0 0 0-22h-4M42 14l7 7-7 7m-8 8-7 7 7 7'},
@@ -16,14 +16,52 @@ export function ChoiceArt({art}: {art: CardArt}) {
   </span>;
 }
 
-export function BusScene() {
-  return <svg className="bus-scene" viewBox="0 0 720 330" role="img" aria-label="Inside a school bus. Ari is seated with their backpack by the aisle.">
+function BusPerson({label, shirt}: {label: string; shirt: string}) {
+  return <g>
+    <ellipse cy="61" rx="27" ry="6" fill="#6a4752" opacity=".2"/>
+    <path d="M-9 41v17m18-17v17" stroke="#483757" strokeWidth="9" strokeLinecap="round"/>
+    <rect x="-20" y="5" width="40" height="42" rx="13" fill={shirt}/>
+    <circle cy="-15" r="23" fill="#55374b"/>
+    <ellipse cy="-10" rx="18" ry="20" fill="#d99a72"/>
+    <path d="M-17-17q2-23 25-15l9 13q-10-2-17-9-5 8-17 11" fill="#55374b"/>
+    <path d="M-6-10h1m10 0h1m-9 10q3 2 6 0" stroke="#483044" strokeWidth="2" strokeLinecap="round" fill="none"/>
+    <rect x="-37" y="-62" width="74" height="18" rx="9" fill="#fff8ee"/>
+    <text y="-49" textAnchor="middle" fill="#493960" fontSize="10" fontWeight="800">{label}</text>
+  </g>;
+}
+
+export function BusScene({choice, stopped, motion}: {choice: Step['choices'][number] | null; stopped: boolean; motion: boolean}) {
+  const action = choice?.scene;
+  const playerX = stopped ? (action === 'report' ? 482 : choice ? 427 : 260) : action === 'support' ? 257 : 132;
+  const playerY = action === 'unsafe' ? 185 : 218;
+  return <svg className={motion ? 'bus-scene moving' : 'bus-scene'} viewBox="0 0 720 330" role="img"
+    aria-label={stopped ? 'Ari and you are at the bus stop with a trusted adult.' : 'Inside a school bus. Ari is seated with their backpack by the aisle.'}>
+    {stopped ? <>
+      <path fill="#c6e5ef" d="M0 0h720v330H0z"/>
+      <path fill="#96bf9b" d="M0 170q140-60 260-20t460-12v192H0z"/>
+      <path fill="#eacbab" d="M0 275h720v55H0z"/>
+      <path d="M99 104v177" stroke="#786275" strokeWidth="7"/>
+      <rect x="64" y="79" width="70" height="48" rx="9" fill="#ffdb8c"/>
+      <text x="99" y="108" textAnchor="middle" fill="#493960" fontSize="12" fontWeight="800">BUS STOP</text>
+      <g className="bus-player" transform={`translate(${action === 'report' ? 545 : 574} 209)`}><BusPerson label="TRUSTED ADULT" shirt="#795b9c"/></g>
+    </> : <>
     <path fill="#ffdc9e" d="M0 0h720v330H0z"/>
     <path fill="#edae67" d="M0 153h720v177H0z"/>
     {[55, 212, 369, 526].map(x => <g key={x} transform={`translate(${x} 41)`}>
       <rect width="139" height="103" rx="13" fill="#b47b6c"/>
       <rect x="7" y="7" width="125" height="89" rx="8" fill="#bce0ee"/>
-      <path d="M7 82q27-30 57-12t68-7v25q0 8-8 8H15q-8 0-8-8z" fill="#95bf9a"/>
+      <svg x="7" y="7" width="125" height="89" viewBox="0 0 125 89" overflow="hidden" aria-hidden="true">
+        <g className="bus-hills">
+          {[0, 240].map(offset => <path key={offset} transform={`translate(${offset} 0)`}
+            d="M0 75q30-30 60-12t60-3q30-20 60 3t60 12v14H0z" fill="#95bf9a"/>)}
+        </g>
+        <g className="bus-trees">
+          {[22, 125, 182, 262, 365, 422].map(tree => <g key={tree} transform={`translate(${tree} 0)`}>
+            <path d="M0 75v14" stroke="#8c776e" strokeWidth="4"/>
+            <ellipse cy="70" rx="10" ry="14" fill="#5b947d"/>
+          </g>)}
+        </g>
+      </svg>
       <path d="M70 7v89" stroke="#b47b6c" strokeWidth="5"/>
     </g>)}
     <path d="M0 281h720v49H0z" fill="#ad8075"/>
@@ -33,6 +71,10 @@ export function BusScene() {
       <rect x="5" y="7" width="102" height="60" rx="15" fill="#bd99ce"/>
       <path d="M21 82v17m72-17v17" stroke="#69496e" strokeWidth="7" strokeLinecap="round"/>
     </g>)}
+    </>}
+    <g transform={`translate(${playerX} ${playerY})`} className="bus-player">
+      <BusPerson label="YOU" shirt="#ec8b78"/>
+    </g>
     <g transform="translate(358 213)">
       <ellipse cy="62" rx="43" ry="8" fill="#916367" opacity=".4"/>
       <rect x="-22" y="4" width="44" height="44" rx="14" fill="#628f83"/>
@@ -40,14 +82,18 @@ export function BusScene() {
       <circle cy="-16" r="25" fill="#47324d"/>
       <ellipse cy="-11" rx="20" ry="21" fill="#b87556"/>
       <path d="M-20-17q4-26 28-17 10 5 12 16-14-3-22-12-6 12-18 13" fill="#47324d"/>
-      <path d="M-7-11h1m12 0h1m-10 10q3-3 6 0" stroke="#483044" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+      <path d={action === 'support' || action === 'report' ? 'M-7-11h1m12 0h1m-10 10q3 3 6 0' : 'M-7-11h1m12 0h1m-10 10q3-3 6 0'} stroke="#483044" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
       <rect x="-22" y="-65" width="44" height="19" rx="8" fill="#fff8ee"/>
       <text y="-52" textAnchor="middle" fill="#493960" fontSize="11" fontWeight="800">ARI</text>
     </g>
-    <g transform="translate(406 237)" stroke="#835269" strokeWidth="4" strokeLinejoin="round">
+    {!stopped && <g transform="translate(573 218)"><BusPerson label="CLASSMATE" shirt="#dd9e53"/></g>}
+    <g key={choice?.label ?? 'bag'} transform="translate(406 237)">
+    <g className={action === 'pattern' ? `bus-bag ${choice?.art === 'repeat' ? 'repeat' : ''}` : undefined}
+      stroke="#835269" strokeWidth="4" strokeLinejoin="round">
       <path d="M10 9V3h13v6" fill="none"/>
       <rect y="9" width="34" height="38" rx="11" fill="#e98976"/>
       <path d="M6 29h22v14H6z" fill="#ffb392"/>
+    </g>
     </g>
   </svg>;
 }
