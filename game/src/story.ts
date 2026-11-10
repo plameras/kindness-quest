@@ -1,3 +1,5 @@
+import type {dialogue} from './dialogue';
+
 export const badges = {
   notice: {name: 'Spot the signs', icon: '◎', detail: 'Notice when hurtful behavior keeps happening.'},
   support: {name: 'Be a friend', icon: '♡', detail: 'Show a classmate they have someone on their side.'},
@@ -8,7 +10,7 @@ export const badges = {
 export type Badge = keyof typeof badges;
 export type CardArt = 'repeat' | 'joke' | 'backpack' | 'seat' | 'adult' | 'shout';
 export type SceneAction = 'pattern' | 'mistake' | 'support' | 'help' | 'unsafe' | 'report' | 'vague';
-type Choice = {scene: SceneAction; cue: string; art?: CardArt; label: string; feedback: string; next?: string; badges?: Badge[]};
+type Choice = {scene: SceneAction; cue: string; voice?: keyof typeof dialogue; art?: CardArt; label: string; feedback: string; next?: string; badges?: Badge[]};
 export type Step = {prompt: string; story: string; choices: Choice[]};
 export type Mission = {title: string; setting: string; icon: string; reflection: string; steps: Record<string, Step>};
 export const missions: Mission[] = [
@@ -22,12 +24,12 @@ export const missions: Mission[] = [
         {scene: 'pattern', cue: 'It happened yesterday, too.', label: 'It looks like a one-time argument.', feedback: 'Think about yesterday. The same group has picked on Sam more than once.'},
       ]},
       act: {prompt: 'What could you do first?', story: 'The group walks away. Sam stands near the bench. Ms. Rivera is nearby, watching the playground.', choices: [
-        {scene: 'support', cue: 'Sam, want some company?', label: 'Ask Sam if they’d like some company.', feedback: 'Sam nods and asks you to come along to tell Ms. Rivera. Having someone beside you can make it easier to ask for help.', next: 'report', badges: ['support']},
-        {scene: 'help', cue: 'Ms. Rivera, can you help?', label: 'Go straight to Ms. Rivera for help.', feedback: 'You can get an adult’s help right away. Ms. Rivera stops to listen and asks what you saw.', next: 'report'},
+        {scene: 'support', cue: 'Sam, want some company?', voice: 'SamSupport', label: 'Ask Sam if they’d like some company.', feedback: 'Sam nods and asks you to come along to tell Ms. Rivera. Having someone beside you can make it easier to ask for help.', next: 'report', badges: ['support']},
+        {scene: 'help', cue: 'Ms. Rivera, can you help?', voice: 'RiveraHelp', label: 'Go straight to Ms. Rivera for help.', feedback: 'You can get an adult’s help right away. Ms. Rivera stops to listen and asks what you saw.', next: 'report'},
         {scene: 'unsafe', cue: 'You start to chase the group.', label: 'Chase the group and shout at them.', feedback: 'It makes sense to feel upset. Chasing the group could make things worse. Try a safer way to help.'},
       ]},
       report: {prompt: 'What could you tell Ms. Rivera?', story: 'Ms. Rivera asks, “Can you tell me what you saw?”', choices: [
-        {scene: 'report', cue: 'It happened by the bench, twice.', label: 'A group called Sam names by the bench today and yesterday. Sam asked them to stop.', feedback: 'You shared what happened, where it happened, and that it happened before. Ms. Rivera checks on Sam and says she’ll follow up with the group.', next: 'finish', badges: ['help']},
+        {scene: 'report', cue: 'It happened by the bench, twice.', voice: 'RiveraReport', label: 'A group called Sam names by the bench today and yesterday. Sam asked them to stop.', feedback: 'You shared what happened, where it happened, and that it happened before. Ms. Rivera checks on Sam and says she’ll follow up with the group.', next: 'finish', badges: ['help']},
         {scene: 'vague', cue: 'Something bad happened…', label: 'Something bad happened.', feedback: 'That can be a good way to start. Now add what you saw, where it happened, and when.'},
       ]},
     },
@@ -41,12 +43,12 @@ export const missions: Mission[] = [
         {scene: 'mistake', cue: 'There’s an empty seat.', label: 'There must be no room at the table.', feedback: 'There is an empty seat. Think about who keeps blocking it and what happened on the other days.'},
       ]},
       act: {prompt: 'How could you help Jo?', story: 'Jo is looking for a seat. Mr. Lee is supervising lunch nearby.', choices: [
-        {scene: 'support', cue: 'Jo, sit with me!', label: 'Invite Jo to sit with you.', feedback: 'Jo smiles and sits with you. You can make someone feel welcome and still ask an adult to help with what’s been happening.', next: 'report', badges: ['support', 'include']},
-        {scene: 'help', cue: 'Mr. Lee, can you help?', label: 'Tell Mr. Lee what you noticed.', feedback: 'Asking for help is a safe choice. Mr. Lee asks you what has been happening.', next: 'report'},
+        {scene: 'support', cue: 'Jo, sit with me!', voice: 'JoSupport', label: 'Invite Jo to sit with you.', feedback: 'Jo smiles and sits with you. You can make someone feel welcome and still ask an adult to help with what’s been happening.', next: 'report', badges: ['support', 'include']},
+        {scene: 'help', cue: 'Mr. Lee, can you help?', voice: 'LeeHelp', label: 'Tell Mr. Lee what you noticed.', feedback: 'Asking for help is a safe choice. Mr. Lee asks you what has been happening.', next: 'report'},
         {scene: 'unsafe', cue: 'You laugh along with the group.', label: 'Laugh along so the group likes you.', feedback: 'It can feel hard to go against a group. Laughing along can add to the hurt. Try one thing that could help Jo.'},
       ]},
       report: {prompt: 'What could you tell Mr. Lee?', story: 'Mr. Lee asks what has been happening near the lunch tables.', choices: [
-        {scene: 'report', cue: 'They’ve blocked the seat for three days.', label: 'The same group has blocked Jo from an empty seat for three days.', feedback: 'You described the pattern clearly. Mr. Lee checks in with Jo privately and makes a plan to follow up.', next: 'finish', badges: ['help']},
+        {scene: 'report', cue: 'They’ve blocked the seat for three days.', voice: 'LeeReport', label: 'The same group has blocked Jo from an empty seat for three days.', feedback: 'You described the pattern clearly. Mr. Lee checks in with Jo privately and makes a plan to follow up.', next: 'finish', badges: ['help']},
         {scene: 'vague', cue: 'Jo had a bad lunch…', label: 'Jo had a bad lunch.', feedback: 'Tell Mr. Lee what you actually saw and how often it happened so he knows where to start.'},
       ]},
     },
@@ -61,13 +63,13 @@ export const missions: Mission[] = [
         {scene: 'pattern', cue: 'The backpack falls again.', art: 'repeat', label: 'The group keeps doing it after Ari asks them to stop.', feedback: 'You spotted the pattern. The same group keeps picking on Ari, even after being asked to stop.', next: 'act', badges: ['notice']},
       ]},
       act: {prompt: 'Pick a safe way to help Ari', story: 'The bus is moving. Ari has picked up the bag and is sitting across the aisle from you.', choices: [
-        {scene: 'support', cue: 'Ari, are you okay?', art: 'seat', label: 'Stay seated and quietly ask Ari if they’re okay.', feedback: 'Ari says they’d like someone to go with them to tell an adult after the bus stops.', next: 'report', badges: ['support']},
+        {scene: 'support', cue: 'Ari, are you okay?', voice: 'AriSupport', art: 'seat', label: 'Stay seated and quietly ask Ari if they’re okay.', feedback: 'Ari says they’d like someone to go with them to tell an adult after the bus stops.', next: 'report', badges: ['support']},
         {scene: 'unsafe', cue: 'You start to stand up.', art: 'shout', label: 'Stand up and shout at the group.', feedback: 'It makes sense to feel upset. While the bus is moving, stay seated and choose a safer way to help.'},
-        {scene: 'help', cue: 'I’ll tell an adult at my stop.', art: 'adult', label: 'Stay seated and plan to tell an adult at your stop.', feedback: 'Getting help is a safe choice. Think about what you saw so you can explain it clearly.', next: 'report'},
+        {scene: 'help', cue: 'I’ll tell an adult at my stop.', voice: 'AriHelp', art: 'adult', label: 'Stay seated and plan to tell an adult at your stop.', feedback: 'Getting help is a safe choice. Think about what you saw so you can explain it clearly.', next: 'report'},
       ]},
       report: {prompt: 'Pick what to tell the adult', story: 'You’re off the bus now. A trusted adult asks what happened on the ride.', choices: [
         {scene: 'vague', cue: 'Something happened with a bag…', art: 'backpack', label: 'Something happened with a bag.', feedback: 'That’s a start. Tell the adult who was affected, what the group did, and when it happened.'},
-        {scene: 'report', cue: 'It happened today and yesterday.', art: 'adult', label: 'The group knocked Ari’s bag down on the bus today and yesterday. Ari asked them to stop.', feedback: 'The adult listens, checks on Ari, and says they’ll speak with the school about making the bus ride safer.', next: 'finish', badges: ['help', 'report']},
+        {scene: 'report', cue: 'It happened today and yesterday.', voice: 'BusReport', art: 'adult', label: 'The group knocked Ari’s bag down on the bus today and yesterday. Ari asked them to stop.', feedback: 'The adult listens, checks on Ari, and says they’ll speak with the school about making the bus ride safer.', next: 'finish', badges: ['help', 'report']},
       ]},
     },
   },
