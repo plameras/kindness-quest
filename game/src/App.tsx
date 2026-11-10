@@ -1,6 +1,6 @@
 import {useEffect, useRef, useState, type CSSProperties} from 'react';
 import {createRoot} from 'react-dom/client';
-import {badges, missions, stepIds, type Badge, type BusPreview, type Step, type StepId} from './story';
+import {badges, busSequence, missions, stepIds, type Badge, type Step, type StepId} from './story';
 import {ChallengeCards} from './ChallengeCards';
 import {Scene} from './Scene';
 import {BusScene, ChoiceArt} from './BusScene';
@@ -27,7 +27,7 @@ function App() {
   const [missionIndex, setMissionIndex] = useState(0);
   const [stepId, setStepId] = useState<StepId | 'finish'>('notice');
   const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [busPreview, setBusPreview] = useState<BusPreview>();
+  const [playbackIndex, setPlaybackIndex] = useState<number | null>(null);
   const [celebrating, setCelebrating] = useState(false);
   const [motion, setMotion] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [soundOn, setSoundOn] = useState(() => {
@@ -48,7 +48,7 @@ function App() {
   const missingStep = stepIds.find(id => !progress.badges.includes(mission.badgeByStep[id]));
   const needsPractice = feedback?.next === 'finish' && missingStep !== undefined;
   const finished = stepId === 'finish';
-  const sequencing = stepId === 'report' && step.challenge?.mode === 'sequence' && !feedback;
+  const busAction = playbackIndex === null ? undefined : busSequence[playbackIndex];
   const nextMission = missions[missionIndex + 1];
   const allMissionsComplete = progress.completed.length === missions.length;
   const unlocked = (i: number) => missions.slice(0, i).every((_, index) => progress.completed.includes(index));
@@ -61,7 +61,15 @@ function App() {
   useEffect(() => {
     if (initialRender.current) { initialRender.current = false; return; }
     (feedback ? feedbackHeading : heading).current?.focus();
-  }, [feedback, stepId, view, missionIndex]);
+  }, [feedback, stepId, view, missionIndex, playbackIndex === null]);
+
+  useEffect(() => {
+    if (view !== 'play' || playbackIndex === null || playbackIndex >= busSequence.length - 1) return;
+    const timer = window.setTimeout(() => {
+      setPlaybackIndex(motion ? playbackIndex + 1 : busSequence.length - 1);
+    }, motion ? 1300 : 0);
+    return () => window.clearTimeout(timer);
+  }, [motion, playbackIndex, view]);
 
   function toggleSound() {
     const enabled = !soundOn;
@@ -73,6 +81,7 @@ function App() {
   }
 
   function start(index: number) {
+    setPlaybackIndex(null);
     setCelebrating(false);
     setMissionIndex(index);
     setStepId('notice');
@@ -121,6 +130,11 @@ function App() {
     setStepId(next);
   }
 
+  function checkChallenge(correct: boolean) {
+    const outcome = step.choices.find(choice => Boolean(choice.badge) === correct);
+    if (outcome) choose(outcome);
+  }
+
   return <>
     <header className="topbar"><div className="top-inner">
       <div className="brand"><span className="logo" aria-hidden="true">✦</span><div>Kindness Quest<small>SCHOOLYARD ADVENTURES</small></div></div>
@@ -141,8 +155,8 @@ function App() {
         {view === 'play' ? <section className="mission-card" aria-label={mission.title}>
           <div className="scene-frame">
             {missionIndex === 2
-              ? <BusScene choice={feedback} stopped={finished || (stepId === 'report' && !sequencing)}
-                preview={sequencing ? busPreview ?? 'ride' : undefined} motion={motion}/>
+              ? <BusScene choice={feedback} stopped={finished || (stepId === 'report' && !!feedback)}
+                sequenceStep={busAction} motion={motion}/>
               : <Scene lunch={missionIndex === 1} action={feedback?.scene} motion={motion}/>}
             {feedback && <div key={feedback.cue} className={motion ? 'scene-cue scene-cue-enter' : 'scene-cue'}>{feedback.cue}</div>}
             <button type="button" className="motion-button" onClick={() => { setCelebrating(false); setMotion(value => !value); }}>
@@ -165,7 +179,14 @@ function App() {
                   : <button className="primary" onClick={() => setView('map')}>View mission map →</button>}
                 <button className="secondary" onClick={() => start(missionIndex)}>Replay mission</button>
               </div>
-            </> : feedback ? <div className={feedback.next ? 'feedback good' : 'feedback retry'}>
+            </> : busAction ? <div className="feedback good">
+              <h2 tabIndex={-1} ref={heading}>Watch your plan</h2>
+              <p className="story" role="status">Step {(playbackIndex ?? 0) + 1} of {busSequence.length}</p>
+              {busAction === 'tell' && <button className="primary" onClick={() => {
+                setPlaybackIndex(null);
+                checkChallenge(true);
+              }}>Continue →</button>}
+            </div> : feedback ? <div className={feedback.next ? 'feedback good' : 'feedback retry'}>
               <div className="eyebrow">{feedback.next ? '✦  GOOD THINKING' : '↻  TAKE ANOTHER LOOK'}</div>
               <h2 tabIndex={-1} ref={feedbackHeading}>{feedback.next ? 'Here’s what happened' : 'Try another choice'}</h2>
               <p className="story">{feedback.feedback}</p>
@@ -179,9 +200,9 @@ function App() {
             </div> : <>
               <h2 tabIndex={-1} ref={heading}>{step.prompt}</h2>
               <p className="story">{step.story}</p>
-              {step.challenge ? <ChallengeCards challenge={step.challenge} onPreview={setBusPreview} onCheck={correct => {
-                const outcome = step.choices.find(choice => Boolean(choice.badge) === correct);
-                if (outcome) choose(outcome);
+              {step.challenge ? <ChallengeCards challenge={step.challenge} onCheck={correct => {
+                if (correct && motion && step.challenge?.mode === 'sequence') setPlaybackIndex(0);
+                else checkChallenge(correct);
               }}/> : <div className={step.choices[0]?.art ? 'choices illustrated-choices' : 'choices'}>{step.choices.map((choice, i) =>
                 <button key={choice.label} onClick={() => choose(choice)}>{choice.art ? <ChoiceArt art={choice.art}/> : <span className="choice-letter" aria-hidden="true">{String.fromCharCode(65+i)}</span>}<span>{choice.label}</span><span className="chevron" aria-hidden="true">›</span></button>
               )}</div>}

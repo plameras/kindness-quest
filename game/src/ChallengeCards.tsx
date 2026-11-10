@@ -1,19 +1,14 @@
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import {ChoiceArt} from './BusScene';
-import type {BusPreview, Challenge} from './story';
+import type {Challenge} from './story';
 
-export function ChallengeCards({challenge, onCheck, onPreview}: {
+export function ChallengeCards({challenge, onCheck}: {
   challenge: Challenge;
   onCheck: (correct: boolean) => void;
-  onPreview: (preview: BusPreview | undefined) => void;
 }) {
   const [selected, setSelected] = useState<number[]>([]);
   const ordered = challenge.mode === 'sequence';
   const needed = challenge.answer.length;
-  const lastPick = selected[selected.length - 1];
-  const preview = challenge.cards[lastPick]?.preview;
-  useEffect(() => { onPreview(preview); }, [onPreview, preview]);
-  useEffect(() => () => onPreview(undefined), [onPreview]);
 
   function toggle(index: number) {
     setSelected(previous => {

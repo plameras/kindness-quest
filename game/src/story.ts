@@ -7,7 +7,7 @@ export const badges = {
   lunchReport: {name: 'Describe the Pattern', icon: '✦', detail: 'Tell Mr. Lee how long the group has been blocking the seat.'},
   busNotice: {name: 'Connect the Clues', icon: '◎', detail: 'Notice that the group keeps knocking Ari’s bag down.'},
   busSupport: {name: 'Check In Safely', icon: '♡', detail: 'Stay seated and quietly ask Ari if they’re okay.'},
-  report: {name: 'Speak Up Safely', icon: '◈', detail: 'Tell a trusted adult what happened on the School Bus.'},
+  report: {name: 'Speak Up Safely', icon: '◈', detail: 'Tell a trusted adult on the bus what happened.'},
 };
 export type Badge = keyof typeof badges;
 export type CardArt = 'repeat' | 'joke' | 'backpack' | 'seat' | 'adult' | 'shout';
@@ -15,10 +15,11 @@ export type SceneAction = 'pattern' | 'mistake' | 'support' | 'help' | 'unsafe' 
 export const stepIds = ['notice', 'act', 'report'] as const;
 export type StepId = typeof stepIds[number];
 type Choice = {scene: SceneAction; cue: string; art?: CardArt; label: string; feedback: string; next?: StepId | 'finish'; badge?: Badge};
-export type BusPreview = 'ride' | 'find' | 'tell';
+export const busSequence = ['ride', 'find', 'tell'] as const;
+export type BusSequenceStep = typeof busSequence[number];
 export type Challenge = {
   mode: 'select' | 'sequence';
-  cards: {label: string; art?: CardArt; preview?: BusPreview}[];
+  cards: {label: string; art?: CardArt}[];
   answer: number[];
 };
 export type Step = {prompt: string; story: string; choices: Choice[]; challenge?: Challenge};
@@ -77,7 +78,7 @@ export const missions: Mission[] = [
   },
   {
     title: 'The School Bus', setting: 'On the way home', icon: '▰',
-    reflection: 'If the bus driver is driving, which trusted adult could you tell when you get off the bus?',
+    reflection: 'Why is it safer to wait until the bus stops before walking over to ask for help?',
     badgeByStep: {notice: 'busNotice', act: 'busSupport', report: 'report'},
     steps: {
       notice: {prompt: 'Pick the card that shows a pattern', story: 'A group keeps knocking Ari’s backpack off the seat, even after Ari asks them to stop. You saw the same thing on yesterday’s ride.', choices: [
@@ -85,23 +86,23 @@ export const missions: Mission[] = [
         {scene: 'pattern', cue: 'Watch the backpack.', art: 'backpack', label: 'A backpack fell once.', feedback: 'Think about yesterday’s ride. The group knocked the bag down more than once.'},
         {scene: 'pattern', cue: 'The backpack falls again.', art: 'repeat', label: 'The group keeps doing it after Ari asks them to stop.', feedback: 'You spotted the pattern. The same group keeps picking on Ari, even after being asked to stop.', next: 'act', badge: 'busNotice'},
       ]},
-      act: {prompt: 'Pick a safe way to help Ari', story: 'The bus is moving. Ari has picked up the bag and is sitting across the aisle from you.', choices: [
+      act: {prompt: 'Pick a safe way to help Ari', story: 'The bus is moving. Ari has picked up the bag. A teacher is riding near the front.', choices: [
         {scene: 'support', cue: 'Ari, are you okay?', art: 'seat', label: 'Stay seated and quietly ask Ari if they’re okay.', feedback: 'Ari says they’d like someone to go with them to tell an adult after the bus stops.', next: 'report', badge: 'busSupport'},
         {scene: 'unsafe', cue: 'You start to stand up.', art: 'shout', label: 'Stand up and shout at the group.', feedback: 'It makes sense to feel upset. While the bus is moving, stay seated and choose a safer way to help.'},
-        {scene: 'help', cue: 'I’ll tell an adult at my stop.', art: 'adult', label: 'Stay seated and plan to tell an adult at your stop.', feedback: 'Getting help is a safe choice. Think about what you saw so you can explain it clearly.', next: 'report'},
+        {scene: 'help', cue: 'I’ll ask the teacher when the bus stops.', art: 'adult', label: 'Stay seated and wait until the bus stops to tell the teacher.', feedback: 'Getting help is a safe choice. Think about what you saw so you can explain it clearly.', next: 'report'},
       ]},
-      report: {prompt: 'Put the safe steps in order', story: 'Tap each card in order, starting while the bus is moving. Tap a picked card again to take it out.',
+      report: {prompt: 'Put the safe steps in order', story: 'Pick what to do first, next, and last. The teacher is on the bus with you.',
         challenge: {
           mode: 'sequence',
           cards: [
-            {label: 'Tell what happened', art: 'repeat', preview: 'tell'},
-            {label: 'Stay seated', art: 'seat', preview: 'ride'},
-            {label: 'Find a trusted adult', art: 'adult', preview: 'find'},
+            {label: 'Tell what happened', art: 'repeat'},
+            {label: 'Stay seated', art: 'seat'},
+            {label: 'Find a trusted adult', art: 'adult'},
           ],
           answer: [1, 2, 0],
         }, choices: [
-        {scene: 'vague', cue: 'What happens first?', art: 'backpack', label: 'Something happened with a bag.', feedback: 'Start by staying safe on the moving bus. Once you’re off, find an adult before you explain what happened.'},
-        {scene: 'report', cue: 'It happened today and yesterday.', art: 'adult', label: 'The group knocked Ari’s bag down on the bus today and yesterday. Ari asked them to stop.', feedback: 'The adult listens, checks on Ari, and says they’ll speak with the school about making the bus ride safer.', next: 'finish', badge: 'report'},
+        {scene: 'vague', cue: 'What happens first?', art: 'backpack', label: 'Something happened with a bag.', feedback: 'Stay seated while the bus is moving. When it stops, find the teacher on the bus, then tell them what happened.'},
+        {scene: 'report', cue: 'It happened today and yesterday.', art: 'adult', label: 'The group knocked Ari’s bag down on the bus today and yesterday. Ari asked them to stop.', feedback: 'The teacher listens and checks on Ari. They’ll follow up with the school to help make the ride safer.', next: 'finish', badge: 'report'},
       ]},
     },
   },

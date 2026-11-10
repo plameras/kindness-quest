@@ -1,4 +1,4 @@
-import type {BusPreview, CardArt, Step} from './story';
+import type {BusSequenceStep, CardArt, Step} from './story';
 
 const illustrations: Record<CardArt, {color: string; path: string}> = {
   repeat: {color: 'lavender', path: 'M49 21H24a11 11 0 0 0 0 22h5m13 0h7a11 11 0 0 0 0-22h-4M42 14l7 7-7 7m-8 8-7 7 7 7'},
@@ -16,10 +16,10 @@ export function ChoiceArt({art}: {art: CardArt}) {
   </span>;
 }
 
-function BusPerson({label, shirt}: {label: string; shirt: string}) {
+function BusPerson({label, shirt, seated = false}: {label: string; shirt: string; seated?: boolean}) {
   return <g>
     <ellipse cy="61" rx="27" ry="6" fill="#6a4752" opacity=".2"/>
-    <path d="M-9 41v17m18-17v17" stroke="#483757" strokeWidth="9" strokeLinecap="round"/>
+    <path d={seated ? "M-9 40l-5 7v8m23-15 5 7v8" : "M-9 41v17m18-17v17"} stroke="#483757" strokeWidth="9" strokeLinecap="round"/>
     <rect x="-20" y="5" width="40" height="42" rx="13" fill={shirt}/>
     <circle cy="-15" r="23" fill="#55374b"/>
     <ellipse cy="-10" rx="18" ry="20" fill="#d99a72"/>
@@ -30,33 +30,28 @@ function BusPerson({label, shirt}: {label: string; shirt: string}) {
   </g>;
 }
 
-const previewLabels: Record<BusPreview, string> = {
-  ride: 'The bus is moving.',
-  find: 'You walk to a trusted adult.',
-  tell: 'You tell the adult what happened.',
+const sequenceLabels: Record<BusSequenceStep, string> = {
+  ride: 'Stay seated while the bus moves.',
+  find: 'The bus stops. Walk to the teacher.',
+  tell: 'Tell the teacher what happened.',
 };
 
-export function BusScene({choice, stopped, preview, motion}: {
+export function BusScene({choice, stopped, sequenceStep, motion}: {
   choice: Step['choices'][number] | null;
   stopped: boolean;
-  preview?: BusPreview;
+  sequenceStep?: BusSequenceStep;
   motion: boolean;
 }) {
-  const action = preview === 'tell' ? 'report' : choice?.scene;
-  const atStop = stopped || preview === 'find' || preview === 'tell';
-  const playerX = atStop ? (action === 'report' ? 482 : preview === 'find' ? 424 : choice ? 427 : 260) : action === 'support' ? 257 : 132;
+  const action = sequenceStep === 'tell' ? 'report' : choice?.scene;
+  const parked = stopped || sequenceStep === 'find' || sequenceStep === 'tell';
+  const playerX = parked ? (action === 'report' ? 492 : sequenceStep === 'find' ? 458 : choice ? 427 : 132)
+    : action === 'support' ? 257 : 132;
   const playerY = action === 'unsafe' ? 185 : 218;
-  return <svg className={motion ? 'bus-scene moving' : 'bus-scene'} viewBox="0 0 720 330" role="img"
-    aria-label={atStop ? 'Ari and you are at the bus stop with a trusted adult.' : 'Inside a school bus. Ari is seated with their backpack by the aisle.'}>
-    {atStop ? <>
-      <path fill="#c6e5ef" d="M0 0h720v330H0z"/>
-      <path fill="#96bf9b" d="M0 170q140-60 260-20t460-12v192H0z"/>
-      <path fill="#eacbab" d="M0 275h720v55H0z"/>
-      <path d="M99 104v177" stroke="#786275" strokeWidth="7"/>
-      <rect x="64" y="79" width="70" height="48" rx="9" fill="#ffdb8c"/>
-      <text x="99" y="108" textAnchor="middle" fill="#493960" fontSize="12" fontWeight="800">BUS STOP</text>
-      <g className="bus-player" transform={`translate(${action === 'report' ? 545 : 574} 209)`}><BusPerson label="TRUSTED ADULT" shirt="#795b9c"/></g>
-    </> : <>
+  const description = sequenceStep ? sequenceLabels[sequenceStep]
+    : parked ? 'The bus is stopped. Ari and you are inside with a teacher.'
+    : 'Inside a moving school bus. Ari is seated with their backpack by the aisle.';
+  return <svg className={`bus-scene${motion ? ' moving' : ''}${parked ? ' parked' : ''}`}
+    viewBox="0 0 720 330" role="img" aria-label={description}>
     <path fill="#ffdc9e" d="M0 0h720v330H0z"/>
     <path fill="#edae67" d="M0 153h720v177H0z"/>
     {[55, 212, 369, 526].map(x => <g key={x} transform={`translate(${x} 41)`}>
@@ -83,11 +78,8 @@ export function BusScene({choice, stopped, preview, motion}: {
       <rect x="5" y="7" width="102" height="60" rx="15" fill="#bd99ce"/>
       <path d="M21 82v17m72-17v17" stroke="#69496e" strokeWidth="7" strokeLinecap="round"/>
     </g>)}
-    </>}
     <g transform={`translate(${playerX} ${playerY})`} className="bus-player">
-      <g key={preview} className={preview === 'find' || preview === 'tell' ? 'bus-preview-walk' : undefined}>
-        <BusPerson label="YOU" shirt="#ec8b78"/>
-      </g>
+      <BusPerson label="YOU" shirt="#ec8b78" seated={!parked && action !== 'unsafe'}/>
     </g>
     <g transform="translate(358 213)">
       <ellipse cy="62" rx="43" ry="8" fill="#916367" opacity=".4"/>
@@ -100,7 +92,9 @@ export function BusScene({choice, stopped, preview, motion}: {
       <rect x="-22" y="-65" width="44" height="19" rx="8" fill="#fff8ee"/>
       <text y="-52" textAnchor="middle" fill="#493960" fontSize="11" fontWeight="800">ARI</text>
     </g>
-    {!atStop && <g transform="translate(573 218)"><BusPerson label="CLASSMATE" shirt="#dd9e53"/></g>}
+    <g className="bus-player" transform={`translate(${action === 'report' ? 551 : 573} 218)`}>
+      <BusPerson label="TEACHER" shirt="#795b9c" seated={!parked}/>
+    </g>
     <g key={choice?.label ?? 'bag'} transform="translate(406 237)">
     <g className={action === 'pattern' ? `bus-bag ${choice?.art === 'repeat' ? 'repeat' : ''}` : undefined}
       stroke="#835269" strokeWidth="4" strokeLinejoin="round">
@@ -109,9 +103,10 @@ export function BusScene({choice, stopped, preview, motion}: {
       <path d="M6 29h22v14H6z" fill="#ffb392"/>
     </g>
     </g>
-    {preview && <g key={preview} className="bus-preview-caption" transform="translate(360 108)">
-      <rect x="-135" y="-16" width="270" height="32" rx="12" fill="#fffaf0"/>
-      <text y="5" textAnchor="middle" fill="#493960" fontSize="15" fontWeight="800">{previewLabels[preview]}</text>
+    {sequenceStep && <g className="bus-sequence-caption" transform="translate(360 108)">
+      <rect x="-151" y="-16" width="302" height="32" rx="12" fill="#fffaf0"/>
+      {sequenceStep === 'tell' && <path d="M114 15l19 15-2-15z" fill="#fffaf0"/>}
+      <text y="5" textAnchor="middle" fill="#493960" fontSize="15" fontWeight="800">{sequenceLabels[sequenceStep]}</text>
     </g>}
   </svg>;
 }

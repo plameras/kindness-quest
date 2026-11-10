@@ -124,8 +124,5 @@ main{max-width:1160px;margin:auto;padding:35px 28px 0}.intro{margin-bottom:25px}
   clip-path:inset(50%);
   white-space:nowrap;
 }
-.bus-scene.moving .bus-preview-walk {animation:bus-preview-walk .6s ease-out both}
-@keyframes bus-preview-walk {
-  from {transform:translateX(-82px)}
-  to {transform:translateX(0)}
-}
+.bus-scene.parked .bus-hills,
+.bus-scene.parked .bus-trees {animation-play-state:paused}
