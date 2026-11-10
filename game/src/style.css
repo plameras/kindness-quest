@@ -195,3 +195,33 @@ main{max-width:1160px;margin:auto;padding:35px 28px 0}.intro{margin-bottom:25px}
 .quest-mission li {padding:3px 0;color:#493960;font-size:14px}
 .quest-mission li span {color:#42825f;font-weight:800}
 .quest-reflection {margin-bottom:0}
+
+.quest-totals {display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 24px}
+.quest-totals div {display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:12px;background:#eee4fb;color:#4b3370;font-size:13px}
+.quest-totals div > span {color:#714aab;font-size:18px}
+.quest-totals strong {font-size:17px}
+.scorecard-cast {margin:10px 0 12px}
+.cast-buttons {display:flex;flex-wrap:wrap;gap:5px}
+.cast-character {
+  display:grid;
+  justify-items:center;
+  align-content:start;
+  gap:3px;
+  min-width:65px;
+  padding:3px 4px 5px;
+  border:1px solid transparent;
+  border-radius:12px;
+  background:transparent;
+  color:#493960;
+  cursor:pointer;
+  font-size:11px;
+  font-weight:800;
+}
+.cast-character svg {display:block;width:54px;height:54px}
+.cast-character:hover,.cast-character[aria-pressed="true"] {border-color:#cbb2e9;background:#f2e9fa}
+.cast-wave {transform-box:fill-box;transform-origin:15% 85%;animation:cast-wave .65s ease-in-out 2}
+@keyframes cast-wave {0%,100% {transform:rotate(0)} 25% {transform:rotate(19deg)} 75% {transform:rotate(-13deg)}}
+@media (prefers-reduced-motion:reduce) {.cast-wave {animation:none}}
+.cast-reply {min-height:43px;padding:7px 9px;border-radius:9px;background:#f1e8f9}
+.cast-reply p {margin:0;font-size:12px}
+.cast-reply strong {color:#5c388e}
