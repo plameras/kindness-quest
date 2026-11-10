@@ -103,3 +103,15 @@ main{max-width:1160px;margin:auto;padding:35px 28px 0}.intro{margin-bottom:25px}
 @media (prefers-reduced-motion:reduce) {
   .badge-confetti i {animation:none}
 }
+
+.challenge-choices:not(.illustrated-choices) button {grid-template-columns:30px 1fr}
+.challenge-choices button[aria-pressed="true"] {background:#eee4fb;border-color:#8c63be}
+.challenge-choices button[aria-pressed="true"] .choice-letter {background:#6945a8;color:#fff}
+.challenge-order {
+  display:grid;
+  place-items:center;
+  color:#6741a6;
+  font-size:12px;
+  font-weight:850;
+}
+.challenge-count {margin:12px 0;color:var(--muted);font-size:13px;font-weight:750}

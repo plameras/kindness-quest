@@ -15,7 +15,12 @@ export type SceneAction = 'pattern' | 'mistake' | 'support' | 'help' | 'unsafe' 
 export const stepIds = ['notice', 'act', 'report'] as const;
 export type StepId = typeof stepIds[number];
 type Choice = {scene: SceneAction; cue: string; art?: CardArt; label: string; feedback: string; next?: StepId | 'finish'; badge?: Badge};
-export type Step = {prompt: string; story: string; choices: Choice[]};
+export type Challenge = {
+  mode: 'select' | 'sequence';
+  cards: {label: string; art?: CardArt}[];
+  answer: number[];
+};
+export type Step = {prompt: string; story: string; choices: Choice[]; challenge?: Challenge};
 export type Mission = {title: string; setting: string; icon: string; reflection: string; badgeByStep: Record<StepId, Badge>; steps: Record<StepId, Step>};
 export const missions: Mission[] = [
   {
@@ -53,9 +58,19 @@ export const missions: Mission[] = [
         {scene: 'help', cue: 'Mr. Lee, can you help?', label: 'Tell Mr. Lee what you noticed.', feedback: 'Asking for help is a safe choice. Mr. Lee asks you what has been happening.', next: 'report'},
         {scene: 'unsafe', cue: 'You laugh along with the group.', label: 'Laugh along so the group likes you.', feedback: 'It can feel hard to go against a group. Laughing along can add to the hurt. Try one thing that could help Jo.'},
       ]},
-      report: {prompt: 'What could you tell Mr. Lee?', story: 'Mr. Lee asks what has been happening near the lunch tables.', choices: [
+      report: {prompt: 'Build your report for Mr. Lee', story: 'Mr. Lee asks what happened near the lunch tables. Pick two details you actually saw that help explain the pattern.',
+        challenge: {
+          mode: 'select',
+          cards: [
+            {label: 'Jo carried a lunch tray.'},
+            {label: 'The same group blocked Jo from an empty seat.'},
+            {label: 'The group probably wanted the seat for a friend.'},
+            {label: 'It happened three days in a row.'},
+          ],
+          answer: [1, 3],
+        }, choices: [
         {scene: 'report', cue: 'They’ve blocked the seat for three days.', label: 'The same group has blocked Jo from an empty seat for three days.', feedback: 'You described the pattern clearly. Mr. Lee checks in with Jo privately and makes a plan to follow up.', next: 'finish', badge: 'lunchReport'},
-        {scene: 'vague', cue: 'Jo had a bad lunch…', label: 'Jo had a bad lunch.', feedback: 'Tell Mr. Lee what you actually saw and how often it happened so he knows where to start.'},
+        {scene: 'vague', cue: 'Jo had a bad lunch…', label: 'Jo had a bad lunch.', feedback: 'Pick the detail that tells Mr. Lee what the group did and the detail that tells him how often it happened. Leave out guesses about why.'},
       ]},
     },
   },
@@ -74,8 +89,17 @@ export const missions: Mission[] = [
         {scene: 'unsafe', cue: 'You start to stand up.', art: 'shout', label: 'Stand up and shout at the group.', feedback: 'It makes sense to feel upset. While the bus is moving, stay seated and choose a safer way to help.'},
         {scene: 'help', cue: 'I’ll tell an adult at my stop.', art: 'adult', label: 'Stay seated and plan to tell an adult at your stop.', feedback: 'Getting help is a safe choice. Think about what you saw so you can explain it clearly.', next: 'report'},
       ]},
-      report: {prompt: 'Pick what to tell the adult', story: 'You’re off the bus now. A trusted adult asks what happened on the ride.', choices: [
-        {scene: 'vague', cue: 'Something happened with a bag…', art: 'backpack', label: 'Something happened with a bag.', feedback: 'That’s a start. Tell the adult who was affected, what the group did, and when it happened.'},
+      report: {prompt: 'Put the safe steps in order', story: 'You’re off the bus now. Think back to the ride and put the three cards in order, starting while the bus is still moving.',
+        challenge: {
+          mode: 'sequence',
+          cards: [
+            {label: 'Explain what happened today and yesterday.', art: 'repeat'},
+            {label: 'Stay seated while the bus is moving.', art: 'seat'},
+            {label: 'At your stop, find a trusted adult.', art: 'adult'},
+          ],
+          answer: [1, 2, 0],
+        }, choices: [
+        {scene: 'vague', cue: 'What happens first?', art: 'backpack', label: 'Something happened with a bag.', feedback: 'Start by staying safe on the moving bus. Once you’re off, find an adult before you explain what happened.'},
         {scene: 'report', cue: 'It happened today and yesterday.', art: 'adult', label: 'The group knocked Ari’s bag down on the bus today and yesterday. Ari asked them to stop.', feedback: 'The adult listens, checks on Ari, and says they’ll speak with the school about making the bus ride safer.', next: 'finish', badge: 'report'},
       ]},
     },

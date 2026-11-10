@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState, type CSSProperties} from 'react';
 import {createRoot} from 'react-dom/client';
 import {badges, missions, stepIds, type Badge, type Step, type StepId} from './story';
+import {ChallengeCards} from './ChallengeCards';
 import {Scene} from './Scene';
 import {BusScene, ChoiceArt} from './BusScene';
 import {missionBadges, progressKey, readProgress} from './progress';
@@ -175,9 +176,12 @@ function App() {
             </div> : <>
               <h2 tabIndex={-1} ref={heading}>{step.prompt}</h2>
               <p className="story">{step.story}</p>
-              <div className={step.choices[0]?.art ? 'choices illustrated-choices' : 'choices'}>{step.choices.map((choice, i) =>
+              {step.challenge ? <ChallengeCards challenge={step.challenge} onCheck={correct => {
+                const outcome = step.choices.find(choice => Boolean(choice.badge) === correct);
+                if (outcome) choose(outcome);
+              }}/> : <div className={step.choices[0]?.art ? 'choices illustrated-choices' : 'choices'}>{step.choices.map((choice, i) =>
                 <button key={choice.label} onClick={() => choose(choice)}>{choice.art ? <ChoiceArt art={choice.art}/> : <span className="choice-letter" aria-hidden="true">{String.fromCharCode(65+i)}</span>}<span>{choice.label}</span><span className="chevron" aria-hidden="true">›</span></button>
-              )}</div>
+              )}</div>}
             </>}
           </div>
         </section> : <section className="map-card" aria-label="Missions">
