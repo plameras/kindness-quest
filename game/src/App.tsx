@@ -79,14 +79,15 @@ function App() {
 
   function choose(choice: Step['choices'][number]) {
     const earnedBadge = choice.badge && !progress.badges.includes(choice.badge) ? choice.badge : undefined;
+    const completesBadgeSet = earnedBadge !== undefined &&
+      levelBadges.includes(earnedBadge) && collected + 1 === levelBadges.length;
     setFeedback({...choice, earnedBadge});
     if (soundOn) {
-      void (sound.current ??= new GameSound()).play(earnedBadge ? 'badge' : choice.next ? 'correct' : 'retry');
+      const cue = completesBadgeSet ? 'victory' : earnedBadge ? 'badge' : choice.next ? 'correct' : 'retry';
+      void (sound.current ??= new GameSound()).play(cue);
     }
     if (earnedBadge) {
-      if (motion && levelBadges.includes(earnedBadge) && collected + 1 === levelBadges.length) {
-        setCelebrating(true);
-      }
+      if (motion && completesBadgeSet) setCelebrating(true);
       setProgress(previous => previous.badges.includes(earnedBadge) ? previous :
         {...previous, badges: [...previous.badges, earnedBadge]});
     }
