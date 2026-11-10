@@ -1,4 +1,4 @@
-import {badges, missions, stepIds, type Badge, type Mission} from './story';
+import {missions, stepIds, type Badge, type Mission} from './story';
 
 export type Progress = {completed: number[]; badges: Badge[]};
 export const progressKey = 'kindness-quest-v2';
@@ -22,12 +22,11 @@ export function readProgress(): Progress {
           }
         }
       }
-      return {
-        completed: missions.flatMap((mission, index) =>
-          saved.completed.includes(index) && missionBadges(mission).every(badge => earned.has(badge))
-            ? [index] : []),
-        badges: (Object.keys(badges) as Badge[]).filter(badge => earned.has(badge)),
-      };
+      const completed = missions.flatMap((mission, index) =>
+        saved.completed.includes(index) && missionBadges(mission).every(badge => earned.has(badge))
+          ? [index] : []);
+      // A reload starts a new attempt for every unfinished mission.
+      return {completed, badges: completed.flatMap(index => missionBadges(missions[index]))};
     }
   } catch { /* Play is still available when storage is disabled. */ }
   return {completed: [], badges: []};
