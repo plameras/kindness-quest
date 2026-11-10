@@ -77,6 +77,15 @@ function App() {
     setView('play');
   }
 
+  function replayFromMap(index: number) {
+    const badgesToReset = missionBadges(missions[index]);
+    setProgress(previous => ({
+      completed: previous.completed.filter(level => level !== index),
+      badges: previous.badges.filter(badge => !badgesToReset.includes(badge)),
+    }));
+    start(index);
+  }
+
   function choose(choice: Step['choices'][number]) {
     const earnedBadge = choice.badge && !progress.badges.includes(choice.badge) ? choice.badge : undefined;
     const completesBadgeSet = earnedBadge !== undefined &&
@@ -181,7 +190,7 @@ function App() {
             return <div className="mission-row" key={item.title}>
             <span className="badge-icon" aria-hidden="true">{item.icon}</span>
               <div><strong>{item.title}</strong><small>{complete ? 'Completed · ' : ''}{count} of {required.length} badges</small></div>
-              <button className="secondary" disabled={locked} onClick={() => start(i)}>{locked ? 'Locked' : complete ? 'Replay' : 'Play'}</button>
+              <button className="secondary" disabled={locked} onClick={() => complete ? replayFromMap(i) : start(i)}>{locked ? 'Locked' : complete ? 'Replay' : 'Play'}</button>
             </div>;
           })}
         </section>}
