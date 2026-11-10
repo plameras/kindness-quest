@@ -1,35 +1,19 @@
 import {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import {badges, missions, type Badge, type Step} from './story';
+import {badges, missions, stepIds, type Badge, type Step, type StepId} from './story';
 import {Scene} from './Scene';
 import {BusScene, ChoiceArt} from './BusScene';
+import {missionBadges, progressKey, readProgress} from './progress';
 import {GameSound} from './sound';
 import './style.css';
 
-type Feedback = Step['choices'][number] & {earnedBadges: Badge[]};
-const badgeKeys = Object.keys(badges) as Badge[];
-type Progress = {completed: number[]; badges: Badge[]};
-const empty: Progress = {completed: [], badges: []};
-const storageKey = 'kindness-quest-v1';
+type Feedback = Step['choices'][number] & {earnedBadge?: Badge};
 const soundKey = 'kindness-quest-sound';
-
-function readProgress(): Progress {
-  try {
-    const saved = JSON.parse(localStorage.getItem(storageKey) ?? 'null');
-    if (Array.isArray(saved?.completed) && Array.isArray(saved?.badges)) {
-      return {
-        completed: missions.map((_, i) => i).filter(i => saved.completed.includes(i)),
-        badges: badgeKeys.filter(badge => saved.badges.includes(badge)),
-      };
-    }
-  } catch { /* Play is still available when storage is disabled. */ }
-  return empty;
-}
 
 function App() {
   const [progress, setProgress] = useState(readProgress);
   const [missionIndex, setMissionIndex] = useState(0);
-  const [stepId, setStepId] = useState('notice');
+  const [stepId, setStepId] = useState<StepId | 'finish'>('notice');
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [motion, setMotion] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [soundOn, setSoundOn] = useState(() => {
@@ -42,15 +26,19 @@ function App() {
   const feedbackHeading = useRef<HTMLHeadingElement>(null);
   const initialRender = useRef(true);
   const mission = missions[missionIndex];
-  const step = mission.steps[stepId];
-  const stepNumber = ['notice','act','report'].indexOf(stepId) + 1;
+  const step = mission.steps[stepId === 'finish' ? 'report' : stepId];
+  const stepNumber = stepId === 'finish' ? stepIds.length : stepIds.indexOf(stepId) + 1;
+  const levelBadges = missionBadges(mission);
+  const collected = levelBadges.filter(badge => progress.badges.includes(badge)).length;
+  const missingStep = stepIds.find(id => !progress.badges.includes(mission.badgeByStep[id]));
+  const needsPractice = feedback?.next === 'finish' && missingStep !== undefined;
   const finished = stepId === 'finish';
   const nextMission = missions[missionIndex + 1];
   const allMissionsComplete = progress.completed.length === missions.length;
-  const unlocked = (i: number) => i === 0 || progress.completed.includes(i - 1);
+  const unlocked = (i: number) => missions.slice(0, i).every((_, index) => progress.completed.includes(index));
 
   useEffect(() => {
-    try { localStorage.setItem(storageKey, JSON.stringify(progress)); }
+    try { localStorage.setItem(progressKey, JSON.stringify(progress)); }
     catch { /* Progress stays available for this visit. */ }
   }, [progress]);
 
@@ -76,13 +64,14 @@ function App() {
   }
 
   function choose(choice: Step['choices'][number]) {
-    const earnedBadges = (choice.badges ?? []).filter(badge => !progress.badges.includes(badge));
-    setFeedback({...choice, earnedBadges});
+    const earnedBadge = choice.badge && !progress.badges.includes(choice.badge) ? choice.badge : undefined;
+    setFeedback({...choice, earnedBadge});
     if (soundOn) {
-      void (sound.current ??= new GameSound()).play(earnedBadges.length ? 'badge' : choice.next ? 'correct' : 'retry');
+      void (sound.current ??= new GameSound()).play(earnedBadge ? 'badge' : choice.next ? 'correct' : 'retry');
     }
-    if (earnedBadges.length) {
-      setProgress(previous => ({...previous, badges: [...new Set([...previous.badges, ...earnedBadges])]}));
+    if (earnedBadge) {
+      setProgress(previous => previous.badges.includes(earnedBadge) ? previous :
+        {...previous, badges: [...previous.badges, earnedBadge]});
     }
   }
 
@@ -91,6 +80,10 @@ function App() {
     setFeedback(null);
     if (!next) return;
     if (next === 'finish') {
+      if (missingStep) {
+        setStepId(missingStep);
+        return;
+      }
       if (soundOn) void (sound.current ??= new GameSound()).play('finish');
       setProgress(previous => previous.completed.includes(missionIndex) ? previous :
         {...previous, completed: [...previous.completed, missionIndex]});
@@ -145,10 +138,13 @@ function App() {
               <div className="eyebrow">{feedback.next ? '✦  GOOD THINKING' : '↻  TAKE ANOTHER LOOK'}</div>
               <h2 tabIndex={-1} ref={feedbackHeading}>{feedback.next ? 'Here’s what happened' : 'Try another choice'}</h2>
               <p className="story">{feedback.feedback}</p>
-              {feedback.earnedBadges.map(badge =>
-                <p className="earned" key={badge}>{badges[badge].icon} Skill collected · {badges[badge].name}</p>
-              )}
-              <button className="primary" onClick={advance}>{feedback.next === 'finish' ? 'Finish mission →' : feedback.next ? 'Continue →' : 'Try again ↻'}</button>
+              {feedback.earnedBadge && <p className="earned">{badges[feedback.earnedBadge].icon} Skill collected · {badges[feedback.earnedBadge].name}</p>}
+              {needsPractice && <p className="story">
+                One more skill to practice. <strong>{badges[mission.badgeByStep[missingStep]].name}.</strong> {badges[mission.badgeByStep[missingStep]].detail}
+              </p>}
+              <button className="primary" onClick={advance}>
+                {needsPractice ? 'Practice the missing skill ↻' : feedback.next === 'finish' ? 'Finish mission →' : feedback.next ? 'Continue →' : 'Try again ↻'}
+              </button>
             </div> : <>
               <h2 tabIndex={-1} ref={heading}>{step.prompt}</h2>
               <p className="story">{step.story}</p>
@@ -159,19 +155,25 @@ function App() {
           </div>
         </section> : <section className="map-card" aria-label="Missions">
           <h2 tabIndex={-1} ref={heading}>Choose a mission</h2>
-          {missions.map((item, i) => <div className="mission-row" key={item.title}>
+          {missions.map((item, i) => {
+            const required = missionBadges(item);
+            const count = required.filter(badge => progress.badges.includes(badge)).length;
+            const locked = !unlocked(i);
+            const complete = progress.completed.includes(i);
+            return <div className="mission-row" key={item.title}>
             <span className="badge-icon" aria-hidden="true">{item.icon}</span>
-            <div><strong>{item.title}</strong><small>{progress.completed.includes(i) ? 'Completed' : unlocked(i) ? item.setting : `Finish ${missions[i - 1].title} to unlock`}</small></div>
-            <button className="secondary" disabled={!unlocked(i)} onClick={() => start(i)}>{!unlocked(i) ? 'Locked' : progress.completed.includes(i) ? 'Replay' : 'Play'}</button>
-          </div>)}
+              <div><strong>{item.title}</strong><small>{complete ? 'Completed · ' : ''}{count} of {required.length} badges</small></div>
+              <button className="secondary" disabled={locked} onClick={() => start(i)}>{locked ? 'Locked' : complete ? 'Replay' : 'Play'}</button>
+            </div>;
+          })}
         </section>}
         <aside>
-          <section className="skill-card">
+          {view === 'play' && <section className="skill-card">
             <div className="eyebrow">✧  YOUR PROGRESS</div>
             <h2>Skill badges</h2>
-            <div className="score"><strong>{progress.badges.length}<span> / {badgeKeys.length}</span></strong><span>collected</span></div>
-            <progress value={progress.badges.length} max={badgeKeys.length} aria-label="Skill badges collected"/>
-            <div className="badge-list">{badgeKeys.map(key => {
+            <div className="score"><strong>{collected}<span> / {levelBadges.length}</span></strong><span>collected</span></div>
+            <progress value={collected} max={levelBadges.length} aria-label="Skill badges collected for this mission"/>
+            <div className="badge-list">{levelBadges.map(key => {
               const badge = badges[key];
               const earned = progress.badges.includes(key);
               return <div className={'badge '+(earned ? 'unlocked' : '')} key={key}>
@@ -179,7 +181,7 @@ function App() {
                 {earned && <span className="check" aria-hidden="true">✓</span>}
               </div>;
             })}</div>
-          </section>
+          </section>}
           <div className="tip"><span aria-hidden="true">♥</span><div><strong>You can ask for help</strong><p>If something like this happens to you or someone you know, you can talk to an adult you trust.</p></div></div>
         </aside>
       </div>
