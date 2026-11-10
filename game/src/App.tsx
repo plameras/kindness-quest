@@ -5,6 +5,8 @@ import {Scene} from './Scene';
 import {BusScene, ChoiceArt} from './BusScene';
 import './style.css';
 
+type Feedback = Step['choices'][number] & {earnedBadges: Badge[]};
+const badgeKeys = Object.keys(badges) as Badge[];
 type Progress = {completed: number[]; badges: Badge[]};
 const empty: Progress = {completed: [], badges: []};
 const storageKey = 'kindness-quest-v1';
@@ -15,7 +17,7 @@ function readProgress(): Progress {
     if (Array.isArray(saved?.completed) && Array.isArray(saved?.badges)) {
       return {
         completed: missions.map((_, i) => i).filter(i => saved.completed.includes(i)),
-        badges: (Object.keys(badges) as Badge[]).filter(badge => saved.badges.includes(badge)),
+        badges: badgeKeys.filter(badge => saved.badges.includes(badge)),
       };
     }
   } catch { /* Play is still available when storage is disabled. */ }
@@ -26,7 +28,7 @@ function App() {
   const [progress, setProgress] = useState(readProgress);
   const [missionIndex, setMissionIndex] = useState(0);
   const [stepId, setStepId] = useState('notice');
-  const [feedback, setFeedback] = useState<Step['choices'][number] | null>(null);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [view, setView] = useState<'play' | 'map'>('play');
   const heading = useRef<HTMLHeadingElement>(null);
   const feedbackHeading = useRef<HTMLHeadingElement>(null);
@@ -57,10 +59,11 @@ function App() {
   }
 
   function choose(choice: Step['choices'][number]) {
-    setFeedback(choice);
-    const badge = choice.badge;
-    if (badge) setProgress(previous => previous.badges.includes(badge) ? previous :
-      {...previous, badges: [...previous.badges, badge]});
+    const earnedBadges = (choice.badges ?? []).filter(badge => !progress.badges.includes(badge));
+    setFeedback({...choice, earnedBadges});
+    if (earnedBadges.length) {
+      setProgress(previous => ({...previous, badges: [...new Set([...previous.badges, ...earnedBadges])]}));
+    }
   }
 
   function advance() {
@@ -108,7 +111,9 @@ function App() {
               <div className="eyebrow">{feedback.next ? '✦  GOOD THINKING' : '↻  TAKE ANOTHER LOOK'}</div>
               <h2 tabIndex={-1} ref={feedbackHeading}>{feedback.next ? 'Here’s what happened' : 'Try another choice'}</h2>
               <p className="story">{feedback.feedback}</p>
-              {feedback.badge && <p className="earned">{badges[feedback.badge].icon} Skill collected · {badges[feedback.badge].name}</p>}
+              {feedback.earnedBadges.map(badge =>
+                <p className="earned" key={badge}>{badges[badge].icon} Skill collected · {badges[badge].name}</p>
+              )}
               <button className="primary" onClick={advance}>{feedback.next === 'finish' ? 'Finish mission →' : feedback.next ? 'Continue →' : 'Try again ↻'}</button>
             </div> : <>
               <h2 tabIndex={-1} ref={heading}>{step.prompt}</h2>
@@ -130,9 +135,9 @@ function App() {
           <section className="skill-card">
             <div className="eyebrow">✧  YOUR PROGRESS</div>
             <h2>Skill badges</h2>
-            <div className="score"><strong>{progress.badges.length}<span> / 3</span></strong><span>collected</span></div>
-            <progress value={progress.badges.length} max={3} aria-label="Skill badges collected"/>
-            <div className="badge-list">{(Object.keys(badges) as Badge[]).map(key => {
+            <div className="score"><strong>{progress.badges.length}<span> / {badgeKeys.length}</span></strong><span>collected</span></div>
+            <progress value={progress.badges.length} max={badgeKeys.length} aria-label="Skill badges collected"/>
+            <div className="badge-list">{badgeKeys.map(key => {
               const badge = badges[key];
               const earned = progress.badges.includes(key);
               return <div className={'badge '+(earned ? 'unlocked' : '')} key={key}>
