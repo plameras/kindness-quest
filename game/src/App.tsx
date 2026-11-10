@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useRef, useState, type CSSProperties} from 'react';
 import {createRoot} from 'react-dom/client';
 import {badges, missions, stepIds, type Badge, type Step, type StepId} from './story';
 import {Scene} from './Scene';
@@ -9,12 +9,24 @@ import './style.css';
 
 type Feedback = Step['choices'][number] & {earnedBadge?: Badge};
 const soundKey = 'kindness-quest-sound';
+const confettiColors = ['#9362ce', '#ffb354', '#60aa80', '#ee799a', '#56a6d9'];
+const confettiPieces = Array.from({length: 20}, (_, index) => {
+  const angle = index * Math.PI * 2 / 20;
+  const distance = index % 2 === 0 ? 105 : 70;
+  return {
+    '--confetti-x': `${Math.cos(angle) * distance}px`,
+    '--confetti-y': `${Math.sin(angle) * distance + 26}px`,
+    '--confetti-spin': `${(index % 2 === 0 ? 1 : -1) * (160 + index * 23)}deg`,
+    backgroundColor: confettiColors[index % confettiColors.length],
+  } as CSSProperties;
+});
 
 function App() {
   const [progress, setProgress] = useState(readProgress);
   const [missionIndex, setMissionIndex] = useState(0);
   const [stepId, setStepId] = useState<StepId | 'finish'>('notice');
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [celebrating, setCelebrating] = useState(false);
   const [motion, setMotion] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [soundOn, setSoundOn] = useState(() => {
     try { return localStorage.getItem(soundKey) === 'on'; }
@@ -30,6 +42,7 @@ function App() {
   const stepNumber = stepId === 'finish' ? stepIds.length : stepIds.indexOf(stepId) + 1;
   const levelBadges = missionBadges(mission);
   const collected = levelBadges.filter(badge => progress.badges.includes(badge)).length;
+  const allBadgesCollected = collected === levelBadges.length;
   const missingStep = stepIds.find(id => !progress.badges.includes(mission.badgeByStep[id]));
   const needsPractice = feedback?.next === 'finish' && missingStep !== undefined;
   const finished = stepId === 'finish';
@@ -57,6 +70,7 @@ function App() {
   }
 
   function start(index: number) {
+    setCelebrating(false);
     setMissionIndex(index);
     setStepId('notice');
     setFeedback(null);
@@ -70,6 +84,9 @@ function App() {
       void (sound.current ??= new GameSound()).play(earnedBadge ? 'badge' : choice.next ? 'correct' : 'retry');
     }
     if (earnedBadge) {
+      if (motion && levelBadges.includes(earnedBadge) && collected + 1 === levelBadges.length) {
+        setCelebrating(true);
+      }
       setProgress(previous => previous.badges.includes(earnedBadge) ? previous :
         {...previous, badges: [...previous.badges, earnedBadge]});
     }
@@ -98,7 +115,7 @@ function App() {
         <button type="button" className="map-button" onClick={toggleSound} aria-label="Sound effects" aria-pressed={soundOn}>
           Sound {soundOn ? 'on' : 'off'}
         </button>
-        <button type="button" className="map-button" onClick={() => setView(view === 'map' ? 'play' : 'map')}>{view === 'map' ? '← Back to mission' : '▦  Mission map'}</button>
+        <button type="button" className="map-button" onClick={() => { setCelebrating(false); setView(view === 'map' ? 'play' : 'map'); }}>{view === 'map' ? '← Back to mission' : '▦  Mission map'}</button>
       </div>
     </div></header>
     <main>
@@ -114,7 +131,7 @@ function App() {
               ? <BusScene choice={feedback} stopped={stepId === 'report' || finished} motion={motion}/>
               : <Scene lunch={missionIndex === 1} action={feedback?.scene} motion={motion}/>}
             {feedback && <div key={feedback.cue} className={motion ? 'scene-cue scene-cue-enter' : 'scene-cue'}>{feedback.cue}</div>}
-            <button type="button" className="motion-button" onClick={() => setMotion(value => !value)}>
+            <button type="button" className="motion-button" onClick={() => { setCelebrating(false); setMotion(value => !value); }}>
               {motion ? 'Pause motion' : 'Play motion'}
             </button>
             <span className="setting"><i />{mission.setting}</span>
@@ -168,11 +185,17 @@ function App() {
           })}
         </section>}
         <aside>
-          {view === 'play' && <section className="skill-card">
+          {view === 'play' && <section className={allBadgesCollected ? 'skill-card badge-victory' : 'skill-card'}>
             <div className="eyebrow">✧  YOUR PROGRESS</div>
             <h2>Skill badges</h2>
             <div className="score"><strong>{collected}<span> / {levelBadges.length}</span></strong><span>collected</span></div>
             <progress value={collected} max={levelBadges.length} aria-label="Skill badges collected for this mission"/>
+            <div role="status">
+              {allBadgesCollected && <p className="badge-victory-message"><span aria-hidden="true">✦</span> All skill badges collected!</p>}
+            </div>
+            {celebrating && motion && <div className="badge-confetti" aria-hidden="true" onAnimationEnd={() => setCelebrating(false)}>
+              {confettiPieces.map((style, index) => <i key={index} style={style}/>)}
+            </div>}
             <div className="badge-list">{levelBadges.map(key => {
               const badge = badges[key];
               const earned = progress.badges.includes(key);

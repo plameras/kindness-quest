@@ -66,3 +66,40 @@ main{max-width:1160px;margin:auto;padding:35px 28px 0}.intro{margin-bottom:25px}
 
 .header-actions {display:flex;justify-content:flex-end;flex-wrap:wrap;gap:6px}
 .header-actions button[aria-pressed="true"] {background:#eee5fb;border-color:#a989d3}
+
+.skill-card {position:relative;overflow:hidden}
+.badge-victory {border-color:#d3bfef;background:#fdfaff}
+.badge-victory-message {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0 0 12px;
+  padding:8px 10px;
+  border-radius:9px;
+  background:#efe4fb;
+  color:#59358c;
+  font-size:13px;
+  font-weight:850;
+}
+.badge-victory-message span {color:#7a4bbb}
+.badge-confetti {position:absolute;inset:0;pointer-events:none}
+.badge-confetti i {
+  position:absolute;
+  top:102px;
+  left:50%;
+  width:6px;
+  height:9px;
+  border-radius:2px;
+  opacity:0;
+  animation:badge-confetti-flight 950ms ease-out both;
+}
+.badge-confetti i:nth-child(3n) {border-radius:50%;width:7px;height:7px}
+@keyframes badge-confetti-flight {
+  0% {opacity:0;transform:translate(0,0) scale(.4)}
+  15% {opacity:1}
+  75% {opacity:1}
+  100% {opacity:0;transform:translate(var(--confetti-x),var(--confetti-y)) rotate(var(--confetti-spin))}
+}
+@media (prefers-reduced-motion:reduce) {
+  .badge-confetti i {animation:none}
+}
