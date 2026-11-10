@@ -1,11 +1,19 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {ChoiceArt} from './BusScene';
-import type {Challenge} from './story';
+import type {BusPreview, Challenge} from './story';
 
-export function ChallengeCards({challenge, onCheck}: {challenge: Challenge; onCheck: (correct: boolean) => void}) {
+export function ChallengeCards({challenge, onCheck, onPreview}: {
+  challenge: Challenge;
+  onCheck: (correct: boolean) => void;
+  onPreview: (preview: BusPreview | undefined) => void;
+}) {
   const [selected, setSelected] = useState<number[]>([]);
   const ordered = challenge.mode === 'sequence';
   const needed = challenge.answer.length;
+  const lastPick = selected[selected.length - 1];
+  const preview = challenge.cards[lastPick]?.preview;
+  useEffect(() => { onPreview(preview); }, [onPreview, preview]);
+  useEffect(() => () => onPreview(undefined), [onPreview]);
 
   function toggle(index: number) {
     setSelected(previous => {
@@ -22,17 +30,17 @@ export function ChallengeCards({challenge, onCheck}: {challenge: Challenge; onCh
   }
 
   return <>
-    <div className={ordered ? 'choices illustrated-choices challenge-choices' : 'choices challenge-choices'}>
+    <div className={ordered ? 'choices challenge-choices sequence-choices' : 'choices challenge-choices'}>
       {challenge.cards.map((card, index) => {
         const position = selected.indexOf(index);
         return <button type="button" key={card.label} aria-pressed={position >= 0}
           onClick={() => toggle(index)} disabled={position < 0 && selected.length === needed}>
-          {card.art ? <ChoiceArt art={card.art}/> :
-            <span className="choice-letter" aria-hidden="true">{position >= 0 ? '✓' : '○'}</span>}
+          <span className="choice-letter">
+            {ordered && position >= 0 ? <><span className="sr-only">Step </span>{position + 1}</> :
+              <span aria-hidden="true">{position >= 0 ? '✓' : '○'}</span>}
+          </span>
+          {card.art && <ChoiceArt art={card.art}/>}
           <span>{card.label}</span>
-          {ordered && <span className="challenge-order" aria-label={position >= 0 ? `Step ${position + 1}` : undefined}>
-            {position >= 0 ? position + 1 : '○'}
-          </span>}
         </button>;
       })}
     </div>

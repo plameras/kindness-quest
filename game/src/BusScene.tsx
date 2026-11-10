@@ -1,4 +1,4 @@
-import type {CardArt, Step} from './story';
+import type {BusPreview, CardArt, Step} from './story';
 
 const illustrations: Record<CardArt, {color: string; path: string}> = {
   repeat: {color: 'lavender', path: 'M49 21H24a11 11 0 0 0 0 22h5m13 0h7a11 11 0 0 0 0-22h-4M42 14l7 7-7 7m-8 8-7 7 7 7'},
@@ -30,13 +30,25 @@ function BusPerson({label, shirt}: {label: string; shirt: string}) {
   </g>;
 }
 
-export function BusScene({choice, stopped, motion}: {choice: Step['choices'][number] | null; stopped: boolean; motion: boolean}) {
-  const action = choice?.scene;
-  const playerX = stopped ? (action === 'report' ? 482 : choice ? 427 : 260) : action === 'support' ? 257 : 132;
+const previewLabels: Record<BusPreview, string> = {
+  ride: 'The bus is moving.',
+  find: 'You walk to a trusted adult.',
+  tell: 'You tell the adult what happened.',
+};
+
+export function BusScene({choice, stopped, preview, motion}: {
+  choice: Step['choices'][number] | null;
+  stopped: boolean;
+  preview?: BusPreview;
+  motion: boolean;
+}) {
+  const action = preview === 'tell' ? 'report' : choice?.scene;
+  const atStop = stopped || preview === 'find' || preview === 'tell';
+  const playerX = atStop ? (action === 'report' ? 482 : preview === 'find' ? 424 : choice ? 427 : 260) : action === 'support' ? 257 : 132;
   const playerY = action === 'unsafe' ? 185 : 218;
   return <svg className={motion ? 'bus-scene moving' : 'bus-scene'} viewBox="0 0 720 330" role="img"
-    aria-label={stopped ? 'Ari and you are at the bus stop with a trusted adult.' : 'Inside a school bus. Ari is seated with their backpack by the aisle.'}>
-    {stopped ? <>
+    aria-label={atStop ? 'Ari and you are at the bus stop with a trusted adult.' : 'Inside a school bus. Ari is seated with their backpack by the aisle.'}>
+    {atStop ? <>
       <path fill="#c6e5ef" d="M0 0h720v330H0z"/>
       <path fill="#96bf9b" d="M0 170q140-60 260-20t460-12v192H0z"/>
       <path fill="#eacbab" d="M0 275h720v55H0z"/>
@@ -73,7 +85,9 @@ export function BusScene({choice, stopped, motion}: {choice: Step['choices'][num
     </g>)}
     </>}
     <g transform={`translate(${playerX} ${playerY})`} className="bus-player">
-      <BusPerson label="YOU" shirt="#ec8b78"/>
+      <g key={preview} className={preview === 'find' || preview === 'tell' ? 'bus-preview-walk' : undefined}>
+        <BusPerson label="YOU" shirt="#ec8b78"/>
+      </g>
     </g>
     <g transform="translate(358 213)">
       <ellipse cy="62" rx="43" ry="8" fill="#916367" opacity=".4"/>
@@ -86,7 +100,7 @@ export function BusScene({choice, stopped, motion}: {choice: Step['choices'][num
       <rect x="-22" y="-65" width="44" height="19" rx="8" fill="#fff8ee"/>
       <text y="-52" textAnchor="middle" fill="#493960" fontSize="11" fontWeight="800">ARI</text>
     </g>
-    {!stopped && <g transform="translate(573 218)"><BusPerson label="CLASSMATE" shirt="#dd9e53"/></g>}
+    {!atStop && <g transform="translate(573 218)"><BusPerson label="CLASSMATE" shirt="#dd9e53"/></g>}
     <g key={choice?.label ?? 'bag'} transform="translate(406 237)">
     <g className={action === 'pattern' ? `bus-bag ${choice?.art === 'repeat' ? 'repeat' : ''}` : undefined}
       stroke="#835269" strokeWidth="4" strokeLinejoin="round">
@@ -95,5 +109,9 @@ export function BusScene({choice, stopped, motion}: {choice: Step['choices'][num
       <path d="M6 29h22v14H6z" fill="#ffb392"/>
     </g>
     </g>
+    {preview && <g key={preview} className="bus-preview-caption" transform="translate(360 108)">
+      <rect x="-135" y="-16" width="270" height="32" rx="12" fill="#fffaf0"/>
+      <text y="5" textAnchor="middle" fill="#493960" fontSize="15" fontWeight="800">{previewLabels[preview]}</text>
+    </g>}
   </svg>;
 }

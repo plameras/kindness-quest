@@ -15,9 +15,10 @@ export type SceneAction = 'pattern' | 'mistake' | 'support' | 'help' | 'unsafe' 
 export const stepIds = ['notice', 'act', 'report'] as const;
 export type StepId = typeof stepIds[number];
 type Choice = {scene: SceneAction; cue: string; art?: CardArt; label: string; feedback: string; next?: StepId | 'finish'; badge?: Badge};
+export type BusPreview = 'ride' | 'find' | 'tell';
 export type Challenge = {
   mode: 'select' | 'sequence';
-  cards: {label: string; art?: CardArt}[];
+  cards: {label: string; art?: CardArt; preview?: BusPreview}[];
   answer: number[];
 };
 export type Step = {prompt: string; story: string; choices: Choice[]; challenge?: Challenge};
@@ -89,13 +90,13 @@ export const missions: Mission[] = [
         {scene: 'unsafe', cue: 'You start to stand up.', art: 'shout', label: 'Stand up and shout at the group.', feedback: 'It makes sense to feel upset. While the bus is moving, stay seated and choose a safer way to help.'},
         {scene: 'help', cue: 'I’ll tell an adult at my stop.', art: 'adult', label: 'Stay seated and plan to tell an adult at your stop.', feedback: 'Getting help is a safe choice. Think about what you saw so you can explain it clearly.', next: 'report'},
       ]},
-      report: {prompt: 'Put the safe steps in order', story: 'You’re off the bus now. Think back to the ride and put the three cards in order, starting while the bus is still moving.',
+      report: {prompt: 'Put the safe steps in order', story: 'Tap each card in order, starting while the bus is moving. Tap a picked card again to take it out.',
         challenge: {
           mode: 'sequence',
           cards: [
-            {label: 'Explain what happened today and yesterday.', art: 'repeat'},
-            {label: 'Stay seated while the bus is moving.', art: 'seat'},
-            {label: 'At your stop, find a trusted adult.', art: 'adult'},
+            {label: 'Tell what happened', art: 'repeat', preview: 'tell'},
+            {label: 'Stay seated', art: 'seat', preview: 'ride'},
+            {label: 'Find a trusted adult', art: 'adult', preview: 'find'},
           ],
           answer: [1, 2, 0],
         }, choices: [

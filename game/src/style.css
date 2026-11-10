@@ -104,14 +104,28 @@ main{max-width:1160px;margin:auto;padding:35px 28px 0}.intro{margin-bottom:25px}
   .badge-confetti i {animation:none}
 }
 
-.challenge-choices:not(.illustrated-choices) button {grid-template-columns:30px 1fr}
+.challenge-choices button {grid-template-columns:30px 1fr}
 .challenge-choices button[aria-pressed="true"] {background:#eee4fb;border-color:#8c63be}
 .challenge-choices button[aria-pressed="true"] .choice-letter {background:#6945a8;color:#fff}
-.challenge-order {
-  display:grid;
-  place-items:center;
-  color:#6741a6;
-  font-size:12px;
-  font-weight:850;
-}
 .challenge-count {margin:12px 0;color:var(--muted);font-size:13px;font-weight:750}
+
+.challenge-choices.sequence-choices button {
+  grid-template-columns:30px 40px 1fr;
+  min-height:54px;
+}
+.sequence-choices .choice-art {grid-column:auto;min-height:34px}
+.sequence-choices .choice-art svg {width:30px;height:29px}
+.sr-only {
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  overflow:hidden;
+  clip-path:inset(50%);
+  white-space:nowrap;
+}
+.bus-scene.moving .bus-preview-walk {animation:bus-preview-walk .6s ease-out both}
+@keyframes bus-preview-walk {
+  from {transform:translateX(-82px)}
+  to {transform:translateX(0)}
+}

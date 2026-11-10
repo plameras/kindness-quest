@@ -1,6 +1,6 @@
 import {useEffect, useRef, useState, type CSSProperties} from 'react';
 import {createRoot} from 'react-dom/client';
-import {badges, missions, stepIds, type Badge, type Step, type StepId} from './story';
+import {badges, missions, stepIds, type Badge, type BusPreview, type Step, type StepId} from './story';
 import {ChallengeCards} from './ChallengeCards';
 import {Scene} from './Scene';
 import {BusScene, ChoiceArt} from './BusScene';
@@ -27,6 +27,7 @@ function App() {
   const [missionIndex, setMissionIndex] = useState(0);
   const [stepId, setStepId] = useState<StepId | 'finish'>('notice');
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [busPreview, setBusPreview] = useState<BusPreview>();
   const [celebrating, setCelebrating] = useState(false);
   const [motion, setMotion] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [soundOn, setSoundOn] = useState(() => {
@@ -47,6 +48,7 @@ function App() {
   const missingStep = stepIds.find(id => !progress.badges.includes(mission.badgeByStep[id]));
   const needsPractice = feedback?.next === 'finish' && missingStep !== undefined;
   const finished = stepId === 'finish';
+  const sequencing = stepId === 'report' && step.challenge?.mode === 'sequence' && !feedback;
   const nextMission = missions[missionIndex + 1];
   const allMissionsComplete = progress.completed.length === missions.length;
   const unlocked = (i: number) => missions.slice(0, i).every((_, index) => progress.completed.includes(index));
@@ -139,7 +141,8 @@ function App() {
         {view === 'play' ? <section className="mission-card" aria-label={mission.title}>
           <div className="scene-frame">
             {missionIndex === 2
-              ? <BusScene choice={feedback} stopped={stepId === 'report' || finished} motion={motion}/>
+              ? <BusScene choice={feedback} stopped={finished || (stepId === 'report' && !sequencing)}
+                preview={sequencing ? busPreview ?? 'ride' : undefined} motion={motion}/>
               : <Scene lunch={missionIndex === 1} action={feedback?.scene} motion={motion}/>}
             {feedback && <div key={feedback.cue} className={motion ? 'scene-cue scene-cue-enter' : 'scene-cue'}>{feedback.cue}</div>}
             <button type="button" className="motion-button" onClick={() => { setCelebrating(false); setMotion(value => !value); }}>
@@ -176,7 +179,7 @@ function App() {
             </div> : <>
               <h2 tabIndex={-1} ref={heading}>{step.prompt}</h2>
               <p className="story">{step.story}</p>
-              {step.challenge ? <ChallengeCards challenge={step.challenge} onCheck={correct => {
+              {step.challenge ? <ChallengeCards challenge={step.challenge} onPreview={setBusPreview} onCheck={correct => {
                 const outcome = step.choices.find(choice => Boolean(choice.badge) === correct);
                 if (outcome) choose(outcome);
               }}/> : <div className={step.choices[0]?.art ? 'choices illustrated-choices' : 'choices'}>{step.choices.map((choice, i) =>
