@@ -29,9 +29,9 @@ function Landmark({index}: {index:number}) {
   </svg>;
 }
 
-export function MissionMap({progress,motion,headingRef,onPlay,onScorecard}: {
+export function MissionMap({progress,motion,headingRef,onPlay,onScorecard,onHover}: {
   progress:Progress; motion:boolean; headingRef:RefObject<HTMLHeadingElement|null>;
-  onPlay:(index:number)=>void; onScorecard:()=>void;
+  onPlay:(index:number)=>void; onScorecard:()=>void; onHover:()=>void;
 }) {
   const next = missions.findIndex((_,i)=>!progress.completed.includes(i));
   const [selected,setSelected] = useState(next<0?3:next);
@@ -64,7 +64,7 @@ export function MissionMap({progress,motion,headingRef,onPlay,onScorecard}: {
       {missions.map((mission,i)=>{
         const earned = missionBadges(mission).filter(b=>progress.badges.includes(b)).length;
         const done = progress.completed.includes(i);
-        return <button key={mission.title} className={`island-stop stop-${i} ${locked(i)?'stop-locked':''} ${done?'stop-complete':''} ${next===i?'stop-next':''} ${selected===i?'stop-selected':''}`} style={{left:`${stops[i].x}%`,top:`${stops[i].y}%`}} aria-pressed={selected===i} aria-label={`${mission.title}, ${locked(i)?'locked':done?'completed':'available'}, ${earned} of 3 badges. Show mission details.`} onClick={()=>setSelected(i)}>
+        return <button key={mission.title} className={`island-stop stop-${i} ${locked(i)?'stop-locked':''} ${done?'stop-complete':''} ${next===i?'stop-next':''} ${selected===i?'stop-selected':''}`} style={{left:`${stops[i].x}%`,top:`${stops[i].y}%`}} aria-pressed={selected===i} aria-label={`${mission.title}, ${locked(i)?'locked':done?'completed':'available'}, ${earned} of 3 badges. Show mission details.`} onPointerEnter={event => { if (event.pointerType !== 'touch') onHover(); }} onFocus={onHover} onClick={()=>setSelected(i)}>
           <span className="stop-flag">{done?'🚩':locked(i)?'🔒':`LEVEL ${i+1}`}</span><Landmark index={i}/><strong>{mission.title}</strong><span className="stop-stars" aria-hidden="true">{[0,1,2].map(n=><span key={n} className={n<earned?'earned-star':''}>★</span>)}</span>
         </button>;
       })}

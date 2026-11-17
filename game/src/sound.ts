@@ -1,4 +1,5 @@
 const cues = {
+  hover: [659],
   move: [330],
   tap: [392],
   interact: [587, 880],
