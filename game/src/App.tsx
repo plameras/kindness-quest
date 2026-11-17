@@ -238,7 +238,7 @@ function App() {
               )}</div>}
             </>}
           </div>
-        </section> : <MissionMap progress={progress} motion={motion} headingRef={heading}
+        </section> : <MissionMap progress={progress} motion={motion} currentMission={missionIndex} headingRef={heading}
           onHover={() => { if (soundOn) void (sound.current ??= new GameSound()).play('hover'); }}
           onPlay={i => progress.completed.includes(i) ? replayFromMap(i) : start(i)}
           onScorecard={() => setView('scorecard')}/>}
