@@ -7,6 +7,7 @@ import {Scene} from './Scene';
 import {BusScene, ChoiceArt} from './BusScene';
 import {missionBadges, progressKey, readProgress} from './progress';
 import {Scorecard} from './Scorecard';
+import {GameLogo} from './GameLogo';
 import {GameSound} from './sound';
 import './style.css';
 
@@ -150,7 +151,7 @@ function App() {
 
   return <>
     <header className="topbar"><div className="top-inner">
-      <div className="brand"><span className="logo" aria-hidden="true">✦</span><div>Kindness Quest<small>SCHOOLYARD ADVENTURES</small></div></div>
+      <GameLogo motion={motion}/>
       <div className="header-actions">
         <button type="button" className="map-button" onClick={toggleSound} aria-label="Sound effects" aria-pressed={soundOn}>
           Sound {soundOn ? 'on' : 'off'}
