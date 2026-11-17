@@ -152,7 +152,11 @@ function App() {
 
   return <>
     <header className="topbar"><div className="top-inner">
-      <GameLogo motion={motion}/>
+      <GameLogo motion={motion} onRestart={() => {
+        sound.current?.stop();
+        setProgress({completed: [], badges: []});
+        start(0);
+      }}/>
       <div className="header-actions">
         <button type="button" className="map-button" onClick={toggleSound} aria-label="Sound effects" aria-pressed={soundOn}>
           Sound {soundOn ? 'on' : 'off'}

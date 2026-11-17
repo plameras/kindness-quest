@@ -1,12 +1,11 @@
 import {useState} from 'react';
 import {Face} from './Face';
 
-export function GameLogo({motion}: {motion: boolean}) {
+export function GameLogo({motion, onRestart}: {motion: boolean; onRestart: () => void}) {
   const [wave, setWave] = useState(0);
 
-  return <div className="brand game-brand">
-    <button type="button" className={motion ? 'logo-mascot animated' : 'logo-mascot'}
-      aria-label="Wave hello to the Kindness Quest mascot" onClick={() => setWave(count => count + 1)}>
+  return <button type="button" className="brand game-brand logo-restart" aria-label="Kindness Quest: restart game from Mission 1" title="Start a new adventure" onClick={() => { setWave(count => count + 1); onRestart(); }}>
+    <span className={motion ? 'logo-mascot animated' : 'logo-mascot'}>
       <svg viewBox="0 0 80 80" aria-hidden="true">
         <rect x="3" y="3" width="74" height="74" rx="23" fill="#734cbc"/>
         <path d="M12 25l3-6 3 6 6 3-6 3-3 6-3-6-6-3z" fill="#ffe39a"/>
@@ -27,9 +26,9 @@ export function GameLogo({motion}: {motion: boolean}) {
           <Face expression="smile" transform="translate(40 33) scale(.9)"/>
         </g>
       </svg>
-    </button>
+    </span>
     <div className="game-wordmark"><span>Kindness</span> <span>Quest<span className="wordmark-star" aria-hidden="true">✦</span></span>
       <small>SCHOOLYARD ADVENTURES</small>
     </div>
-  </div>;
+  </button>;
 }
