@@ -1,10 +1,12 @@
-import {useState} from 'react';
+import {useRef, useState} from 'react';
 import {Face} from './Face';
 
 export function GameLogo({motion, onRestart}: {motion: boolean; onRestart: () => void}) {
   const [wave, setWave] = useState(0);
+  const dialog = useRef<HTMLDialogElement>(null);
 
-  return <button type="button" className="brand game-brand logo-restart" aria-label="Kindness Quest: restart game from Mission 1" title="Start a new adventure" onClick={() => { setWave(count => count + 1); onRestart(); }}>
+  return <>
+  <button type="button" className="brand game-brand logo-restart" aria-label="Kindness Quest: restart game" aria-haspopup="dialog" title="Restart game" onClick={() => { setWave(count => count + 1); dialog.current?.showModal(); }}>
     <span className={motion ? 'logo-mascot animated' : 'logo-mascot'}>
       <svg viewBox="0 0 80 80" aria-hidden="true">
         <rect x="3" y="3" width="74" height="74" rx="23" fill="#734cbc"/>
@@ -27,8 +29,19 @@ export function GameLogo({motion, onRestart}: {motion: boolean; onRestart: () =>
         </g>
       </svg>
     </span>
-    <div className="game-wordmark"><span>Kindness</span> <span>Quest<span className="wordmark-star" aria-hidden="true">✦</span></span>
+    <span className="game-wordmark"><span>Kindness</span> <span>Quest<span className="wordmark-star" aria-hidden="true">✦</span></span>
       <small>SCHOOLYARD ADVENTURES</small>
+      <span className="restart-logo-label">↻ Restart game</span>
+    </span>
+  </button>
+  <dialog ref={dialog} className="restart-dialog" aria-labelledby="restart-title" aria-describedby="restart-description">
+    <span className="restart-dialog-icon" aria-hidden="true">🏡</span>
+    <h2 id="restart-title">Start a new adventure?</h2>
+    <p id="restart-description">Your badges and mission progress will reset. You’ll begin again at Mission 1.</p>
+    <div className="restart-dialog-actions">
+      <button type="button" className="secondary" autoFocus onClick={() => dialog.current?.close()}>Keep playing</button>
+      <button type="button" className="primary" onClick={() => { dialog.current?.close(); onRestart(); }}>↻ Restart game</button>
     </div>
-  </button>;
+  </dialog>
+  </>;
 }
