@@ -7,6 +7,7 @@ import {Scene} from './Scene';
 import {BusScene, ChoiceArt} from './BusScene';
 import {missionBadges, progressKey, readProgress} from './progress';
 import {Scorecard} from './Scorecard';
+import {MissionMap} from './MissionMap';
 import {GameLogo} from './GameLogo';
 import {GameSound} from './sound';
 import './style.css';
@@ -168,7 +169,7 @@ function App() {
         <h1>{view === 'play' ? mission.title : 'Mission map'}</h1>
         <p>{view === 'play' ? 'Notice what’s happening, then choose a safe way to help.' : 'Try each mission and collect skills you can use at school.'}</p>
       </div>
-      <div className="layout">
+      <div className={view === 'map' ? 'layout map-layout' : 'layout'}>
         {view === 'play' ? <section className="mission-card" aria-label={mission.title}>
           <div className="scene-frame">
             {inLibrary
@@ -233,21 +234,9 @@ function App() {
               )}</div>}
             </>}
           </div>
-        </section> : <section className="map-card" aria-label="Missions">
-          <h2 tabIndex={-1} ref={heading}>Choose a mission</h2>
-          {allMissionsComplete && <button className="primary" onClick={() => setView('scorecard')}>View quest scorecard →</button>}
-          {missions.map((item, i) => {
-            const required = missionBadges(item);
-            const count = required.filter(badge => progress.badges.includes(badge)).length;
-            const locked = !unlocked(i);
-            const complete = progress.completed.includes(i);
-            return <div className="mission-row" key={item.title}>
-            <span className="badge-icon" aria-hidden="true">{item.icon}</span>
-              <div><strong>{item.title}</strong><small>{complete ? 'Completed · ' : ''}{count} of {required.length} badges</small></div>
-              <button className="secondary" disabled={locked} onClick={() => complete ? replayFromMap(i) : start(i)}>{locked ? 'Locked' : complete ? 'Replay' : 'Play'}</button>
-            </div>;
-          })}
-        </section>}
+        </section> : <MissionMap progress={progress} motion={motion} headingRef={heading}
+          onPlay={i => progress.completed.includes(i) ? replayFromMap(i) : start(i)}
+          onScorecard={() => setView('scorecard')}/>}
         <aside>
           {view === 'play' && <section className={allBadgesCollected ? 'skill-card badge-victory' : 'skill-card'}>
             <div className="eyebrow">✧  YOUR PROGRESS</div>
