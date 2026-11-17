@@ -57,7 +57,10 @@ export function MissionMap({progress,motion,headingRef,onPlay,onScorecard}: {
         {[[142,176],[738,352],[122,475],[746,844],[485,825],[485,100],[125,851],[760,102]].map(([x,y],i)=><g key={i} transform={`translate(${x} ${y})`}><ellipse cy="30" rx="30" ry="10" fill="#3b754735"/><path d="M0 0v30" stroke="#966b46" strokeWidth="9"/><circle cy="-9" r="31" fill={i%2?'#4d9468':'#5fa66d'}/><circle cx="-10" cy="-18" r="16" fill="#7cbd77"/></g>)}
         {Array.from({length:26},(_,i)=><g key={i} transform={`translate(${110+(i*137)%670} ${90+(i*193)%790})`}><path d="M0 0v8" stroke="#5e9b62" strokeWidth="2"/><circle r="4" fill={i%2?'#fff5c6':'#f7ca6b'}/></g>)}
       </svg>
-      <span className="island-start">YOUR JOURNEY STARTS HERE ↑</span>
+      <span className="island-start" role="img" aria-label="Home: your adventure starts here">
+        <svg viewBox="0 0 80 80" aria-hidden="true"><ellipse cx="40" cy="72" rx="30" ry="5" fill="#41633b33"/><rect x="17" y="33" width="46" height="35" rx="4" fill="#fff4d4" stroke="#b18b59" strokeWidth="2"/><path d="M9 36L40 10l31 26" fill="#dc8068" stroke="#9b604e" strokeWidth="4" strokeLinejoin="round"/><rect x="33" y="46" width="15" height="22" rx="3" fill="#7957aa"/><rect x="22" y="43" width="9" height="10" rx="2" fill="#9dd4df"/><rect x="51" y="43" width="9" height="10" rx="2" fill="#9dd4df"/><circle cx="43" cy="58" r="1.5" fill="#ffe19a"/><path d="M38 24l2-4 2 4 4 2-4 2-2 4-2-4-4-2z" fill="#ffe6a2"/></svg>
+        <strong>START</strong>
+      </span>
       {missions.map((mission,i)=>{
         const earned = missionBadges(mission).filter(b=>progress.badges.includes(b)).length;
         const done = progress.completed.includes(i);
